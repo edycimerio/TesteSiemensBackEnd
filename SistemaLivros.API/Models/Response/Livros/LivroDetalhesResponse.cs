@@ -20,7 +20,6 @@ namespace SistemaLivros.API.Models.Response.Livros
         public string GeneroNome { get; set; }
         public string GeneroDescricao { get; set; }
         
-        // Data de cadastro
-        public DateTime DataCadastro { get; set; }
+        // Removido DataCadastro pois não existe na tabela
     }
 }

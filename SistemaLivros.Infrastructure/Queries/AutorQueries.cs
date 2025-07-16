@@ -19,7 +19,7 @@ namespace SistemaLivros.Infrastructure.Queries
 
         public async Task<IEnumerable<AutorDto>> GetAllAsync()
         {
-            const string sql = @"SELECT Id, Nome, Biografia FROM Autores";
+            const string sql = @"SELECT Id, Nome, Biografia, DataNascimento FROM Autores";
             
             using var connection = _context.CreateConnection();
             return await connection.QueryAsync<AutorDto>(sql);
@@ -27,7 +27,7 @@ namespace SistemaLivros.Infrastructure.Queries
 
         public async Task<AutorDto> GetByIdAsync(int id)
         {
-            const string sql = @"SELECT Id, Nome, Biografia FROM Autores WHERE Id = @Id";
+            const string sql = @"SELECT Id, Nome, Biografia, DataNascimento FROM Autores WHERE Id = @Id";
             
             using var connection = _context.CreateConnection();
             return await connection.QueryFirstOrDefaultAsync<AutorDto>(sql, new { Id = id });
@@ -35,41 +35,30 @@ namespace SistemaLivros.Infrastructure.Queries
 
         public async Task<AutorDetalhesDto> GetDetalhesAsync(int id)
         {
-            const string sql = @"
-                SELECT a.Id, a.Nome, a.Biografia,
-                       l.Id as LivroId, l.Titulo, l.Ano, l.GeneroId, g.Nome as GeneroNome,
-                       l.AutorId, a.Nome as AutorNome
-                FROM Autores a
-                LEFT JOIN Livros l ON a.Id = l.AutorId
-                LEFT JOIN Generos g ON l.GeneroId = g.Id
-                WHERE a.Id = @Id";
+            // 1. Buscar o autor básico
+            const string autorSql = @"SELECT Id, Nome, Biografia, DataNascimento FROM Autores WHERE Id = @Id";
             
             using var connection = _context.CreateConnection();
+            var autor = await connection.QueryFirstOrDefaultAsync<AutorDetalhesDto>(autorSql, new { Id = id });
             
-            var autorDicionario = new Dictionary<int, AutorDetalhesDto>();
+            if (autor == null)
+                return null;
+                
+            // 2. Buscar os livros associados a este autor
+            const string livrosSql = @"
+                SELECT l.Id, l.Titulo, l.Ano, l.GeneroId, g.Nome as GeneroNome,
+                       l.AutorId, a.Nome as AutorNome
+                FROM Livros l
+                INNER JOIN Autores a ON l.AutorId = a.Id
+                LEFT JOIN Generos g ON l.GeneroId = g.Id
+                WHERE l.AutorId = @AutorId";
+                
+            var livros = await connection.QueryAsync<LivroDto>(livrosSql, new { AutorId = id });
             
-            var resultado = await connection.QueryAsync<AutorDetalhesDto, LivroDto, AutorDetalhesDto>(
-                sql,
-                (autor, livro) => {
-                    if (!autorDicionario.TryGetValue(autor.Id, out var autorEntry))
-                    {
-                        autorEntry = autor;
-                        autorEntry.Livros = new List<LivroDto>();
-                        autorDicionario.Add(autor.Id, autorEntry);
-                    }
-                    
-                    if (livro != null && livro.Id != 0)
-                    {
-                        autorEntry.Livros.Add(livro);
-                    }
-                    
-                    return autorEntry;
-                },
-                new { Id = id },
-                splitOn: "LivroId"
-            );
+            // 3. Associar os livros ao autor
+            autor.Livros = livros.ToList();
             
-            return autorDicionario.Values.FirstOrDefault();
+            return autor;
         }
     }
 }

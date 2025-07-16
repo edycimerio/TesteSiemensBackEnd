@@ -21,7 +21,7 @@ namespace SistemaLivros.Application.Commands.Autores
             if (autor == null)
                 return false;
                 
-            autor.Atualizar(request.Nome, request.Biografia);
+            autor.Atualizar(request.Nome, request.Biografia, request.DataNascimento);
             
             await _autorRepository.UpdateAsync(autor);
             

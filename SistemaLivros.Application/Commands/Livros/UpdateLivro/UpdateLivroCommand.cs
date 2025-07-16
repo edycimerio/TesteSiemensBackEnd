@@ -10,6 +10,11 @@ namespace SistemaLivros.Application.Commands.Livros
         public int GeneroId { get; set; }
         public int AutorId { get; set; }
 
+        // Construtor sem parâmetros para o AutoMapper
+        public UpdateLivroCommand()
+        {
+        }
+
         public UpdateLivroCommand(int id, string titulo, int ano, int generoId, int autorId)
         {
             Id = id;

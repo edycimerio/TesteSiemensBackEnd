@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Storage;
 using SistemaLivros.Domain.Entities;
 
 namespace SistemaLivros.Infrastructure.Data
@@ -12,6 +14,15 @@ namespace SistemaLivros.Infrastructure.Data
         public DbSet<Genero> Generos { get; set; }
         public DbSet<Autor> Autores { get; set; }
         public DbSet<Livro> Livros { get; set; }
+        
+        // Sobrescrever o método OnConfiguring para garantir que o SQLite seja configurado corretamente
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            if (!optionsBuilder.IsConfigured)
+            {
+                optionsBuilder.UseSqlite("Data Source=SistemaLivros.db");
+            }
+        }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

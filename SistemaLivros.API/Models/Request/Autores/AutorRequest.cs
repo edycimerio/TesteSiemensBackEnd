@@ -12,7 +12,8 @@ namespace SistemaLivros.API.Models.Request.Autores
         [StringLength(1000, ErrorMessage = "A biografia do autor deve ter no máximo {1} caracteres")]
         public string Biografia { get; set; }
         
+        [Required(ErrorMessage = "A data de nascimento do autor é obrigatória")]
         [DataType(DataType.Date)]
-        public DateTime? DataNascimento { get; set; }
+        public DateTime DataNascimento { get; set; }
     }
 }

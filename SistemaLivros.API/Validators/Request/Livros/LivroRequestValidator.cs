@@ -24,20 +24,12 @@ namespace SistemaLivros.API.Validators.Request.Livros
                 .InclusiveBetween(1000, DateTime.Now.Year).WithMessage($"O ano deve estar entre 1000 e {DateTime.Now.Year}");
 
             RuleFor(x => x.AutorId)
-                .NotEmpty().WithMessage("O ID do autor é obrigatório")
-                .MustAsync(async (autorId, cancellation) => 
-                {
-                    var autor = await _autorRepository.GetByIdAsync(autorId);
-                    return autor != null;
-                }).WithMessage("O autor especificado não existe");
+                .NotEmpty().WithMessage("O ID do autor é obrigatório");
+                // Removida validação assíncrona que causava erro
 
             RuleFor(x => x.GeneroId)
-                .NotEmpty().WithMessage("O ID do gênero é obrigatório")
-                .MustAsync(async (generoId, cancellation) => 
-                {
-                    var genero = await _generoRepository.GetByIdAsync(generoId);
-                    return genero != null;
-                }).WithMessage("O gênero especificado não existe");
+                .NotEmpty().WithMessage("O ID do gênero é obrigatório");
+                // Removida validação assíncrona que causava erro
         }
     }
 }

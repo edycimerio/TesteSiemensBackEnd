@@ -54,11 +54,11 @@ namespace SistemaLivros.Infrastructure.Data
                 {
                     logger.LogInformation("Inserindo dados iniciais de autores...");
                     dbContext.Autores.AddRange(
-                        new Domain.Entities.Autor("J.K. Rowling", "Autora britânica conhecida pela série Harry Potter"),
-                        new Domain.Entities.Autor("George R.R. Martin", "Autor americano conhecido pela série As Crônicas de Gelo e Fogo"),
-                        new Domain.Entities.Autor("Agatha Christie", "Autora britânica de romances policiais"),
-                        new Domain.Entities.Autor("Machado de Assis", "Escritor brasileiro, considerado um dos maiores nomes da literatura"),
-                        new Domain.Entities.Autor("Clarice Lispector", "Escritora brasileira reconhecida por suas obras de ficção")
+                        new Domain.Entities.Autor("J.K. Rowling", "Autora britânica conhecida pela série Harry Potter", new DateTime(1965, 7, 31)),
+                        new Domain.Entities.Autor("George R.R. Martin", "Autor americano conhecido pela série As Crônicas de Gelo e Fogo", new DateTime(1948, 9, 20)),
+                        new Domain.Entities.Autor("Agatha Christie", "Autora britânica de romances policiais", new DateTime(1890, 9, 15)),
+                        new Domain.Entities.Autor("Machado de Assis", "Escritor brasileiro, considerado um dos maiores nomes da literatura", new DateTime(1839, 6, 21)),
+                        new Domain.Entities.Autor("Clarice Lispector", "Escritora brasileira reconhecida por suas obras de ficção", new DateTime(1920, 12, 10))
                     );
                     await dbContext.SaveChangesAsync();
                 }

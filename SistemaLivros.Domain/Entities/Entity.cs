@@ -3,7 +3,7 @@ using System;
 namespace SistemaLivros.Domain.Entities
 {
     public abstract class Entity
-    {
+    {        
         public int Id { get; protected set; }
         
         public override bool Equals(object obj)

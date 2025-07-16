@@ -2,6 +2,7 @@ using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -94,25 +95,45 @@ if (app.Environment.IsDevelopment())
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "Sistema de Livros API v1");
         c.RoutePrefix = string.Empty; // Para definir a raiz como página do Swagger
     });
-    
-    // Inicialização do banco de dados em ambiente de desenvolvimento
-    using (var scope = app.Services.CreateScope())
+}
+
+// Inicialização do banco de dados (sempre executado, independente do ambiente)
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    var logger = services.GetRequiredService<ILogger<Program>>();
+    try
     {
-        var services = scope.ServiceProvider;
-        var logger = services.GetRequiredService<ILogger<Program>>();
-        try
+        // Inicializa o banco de dados e aplica as migrações
+        var dbContext = services.GetRequiredService<AppDbContext>();
+        
+        // Remover o banco de dados existente para garantir uma criação limpa
+        dbContext.Database.EnsureDeleted();
+        
+        // Criar o banco de dados com o esquema atual
+        dbContext.Database.EnsureCreated();
+        
+        logger.LogInformation("Banco de dados recriado com sucesso.");
+        
+        // Inserir dados iniciais se necessário
+        DatabaseInitializer.SeedDataAsync(services, logger).Wait();
+        
+        logger.LogInformation("Dados iniciais inseridos com sucesso.");
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Ocorreu um erro durante a inicialização do banco de dados: {Message}", ex.Message);
+        logger.LogError(ex.StackTrace);
+        if (ex.InnerException != null)
         {
-            // Inicializa o banco de dados e aplica as migrações
-            DatabaseInitializer.InitializeAsync(services, logger).Wait();
-            DatabaseInitializer.SeedDataAsync(services, logger).Wait();
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Ocorreu um erro durante a inicialização do banco de dados.");
+            logger.LogError("Inner Exception: {Message}", ex.InnerException.Message);
+            logger.LogError(ex.InnerException.StackTrace);
         }
     }
 }
-else
+
+// Configuração para ambiente de produção
+if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");
     app.UseHsts();

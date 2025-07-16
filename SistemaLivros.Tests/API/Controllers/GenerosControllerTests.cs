@@ -5,6 +5,7 @@ using Moq;
 using SistemaLivros.API.Controllers;
 using SistemaLivros.API.Models.Request.Generos;
 using SistemaLivros.API.Models.Response.Generos;
+using SistemaLivros.API.Models.Response.Livros;
 using SistemaLivros.Application.Commands.Generos;
 using SistemaLivros.Application.DTOs;
 using SistemaLivros.Application.Queries.Generos.GetAllGeneros;
@@ -88,7 +89,7 @@ namespace SistemaLivros.Tests.API.Controllers
         public async Task TestaGetById_NaoExistente()
         {
             // Arrange
-            _mediatorMock.Setup(m => m.Send(It.IsAny<GetGeneroByIdQuery>(), It.IsAny<CancellationToken>()))
+            _mediatorMock.Setup(m => m.Send(It.Is<GetGeneroByIdQuery>(q => q.Id == 99), It.IsAny<CancellationToken>()))
                 .ReturnsAsync((GeneroDto)null);
 
             // Act
@@ -129,6 +130,143 @@ namespace SistemaLivros.Tests.API.Controllers
             var returnValue = Assert.IsType<GeneroResponse>(createdAtResult.Value);
             Assert.Equal(1, returnValue.Id);
             Assert.Equal("Ficção Científica", returnValue.Nome);
+        }
+        
+        [Fact]
+        public async Task TestaGetDetalhes_Existente()
+        {
+            // Arrange
+            var generoDetalhesDto = new GeneroDetalhesDto 
+            { 
+                Id = 1, 
+                Nome = "Ficção Científica", 
+                Descricao = "Livros de ficção científica",
+                Livros = new List<LivroDto>
+                {
+                    new LivroDto { Id = 1, Titulo = "Duna", Ano = 1965 },
+                    new LivroDto { Id = 2, Titulo = "Neuromancer", Ano = 1984 }
+                }
+            };
+            
+            var generoDetalhesResponse = new GeneroDetalhesResponse 
+            { 
+                Id = 1, 
+                Nome = "Ficção Científica", 
+                Descricao = "Livros de ficção científica",
+                Livros = new List<LivroSimplificadoResponse>
+                {
+                    new LivroSimplificadoResponse { Id = 1, Titulo = "Duna", Ano = 1965 },
+                    new LivroSimplificadoResponse { Id = 2, Titulo = "Neuromancer", Ano = 1984 }
+                }
+            };
+
+            _mediatorMock.Setup(m => m.Send(It.Is<GetGeneroDetalhesQuery>(q => q.Id == 1), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(generoDetalhesDto);
+
+            _mapperMock.Setup(m => m.Map<GeneroDetalhesResponse>(generoDetalhesDto))
+                .Returns(generoDetalhesResponse);
+
+            // Act
+            var result = await _controller.GetDetalhes(1);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            var returnValue = Assert.IsType<GeneroDetalhesResponse>(okResult.Value);
+            Assert.Equal(1, returnValue.Id);
+            Assert.Equal("Ficção Científica", returnValue.Nome);
+            Assert.Equal(2, returnValue.Livros.Count());
+        }
+
+        [Fact]
+        public async Task TestaGetDetalhes_NaoExistente()
+        {
+            // Arrange
+            _mediatorMock.Setup(m => m.Send(It.Is<GetGeneroDetalhesQuery>(q => q.Id == 99), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((GeneroDetalhesDto)null);
+
+            // Act
+            var result = await _controller.GetDetalhes(99);
+
+            // Assert
+            Assert.IsType<NotFoundResult>(result);
+        }
+
+        [Fact]
+        public async Task TestaUpdate_Existente()
+        {
+            // Arrange
+            var id = 1;
+            var request = new GeneroRequest { Nome = "Ficção Científica Atualizado", Descricao = "Descrição atualizada" };
+            var command = new UpdateGeneroCommand(id, "Ficção Científica Atualizado", "Descrição atualizada");
+
+            _mapperMock.Setup(m => m.Map<UpdateGeneroCommand>(request))
+                .Returns(command);
+
+            _mediatorMock.Setup(m => m.Send(It.Is<UpdateGeneroCommand>(c => c.Id == id), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(true);
+
+            // Act
+            var result = await _controller.Update(id, request);
+
+            // Assert
+            Assert.IsType<NoContentResult>(result);
+            _mediatorMock.Verify(m => m.Send(It.Is<UpdateGeneroCommand>(c => c.Id == id), It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task TestaUpdate_NaoExistente()
+        {
+            // Arrange
+            var id = 99;
+            var request = new GeneroRequest { Nome = "Ficção Científica", Descricao = "Livros de ficção científica" };
+            var command = new UpdateGeneroCommand(id, "Ficção Científica", "Livros de ficção científica");
+
+            _mapperMock.Setup(m => m.Map<UpdateGeneroCommand>(request))
+                .Returns(command);
+
+            _mediatorMock.Setup(m => m.Send(It.Is<UpdateGeneroCommand>(c => c.Id == id), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(false);
+
+            // Act
+            var result = await _controller.Update(id, request);
+
+            // Assert
+            Assert.IsType<NotFoundResult>(result);
+            _mediatorMock.Verify(m => m.Send(It.Is<UpdateGeneroCommand>(c => c.Id == id), It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task TestaDelete_Existente()
+        {
+            // Arrange
+            var id = 1;
+
+            _mediatorMock.Setup(m => m.Send(It.Is<DeleteGeneroCommand>(c => c.Id == id), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(true);
+
+            // Act
+            var result = await _controller.Delete(id);
+
+            // Assert
+            Assert.IsType<NoContentResult>(result);
+            _mediatorMock.Verify(m => m.Send(It.Is<DeleteGeneroCommand>(c => c.Id == id), It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task TestaDelete_NaoExistente()
+        {
+            // Arrange
+            var id = 99;
+
+            _mediatorMock.Setup(m => m.Send(It.Is<DeleteGeneroCommand>(c => c.Id == id), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(false);
+
+            // Act
+            var result = await _controller.Delete(id);
+
+            // Assert
+            Assert.IsType<NotFoundResult>(result);
+            _mediatorMock.Verify(m => m.Send(It.Is<DeleteGeneroCommand>(c => c.Id == id), It.IsAny<CancellationToken>()), Times.Once);
         }
     }
 }

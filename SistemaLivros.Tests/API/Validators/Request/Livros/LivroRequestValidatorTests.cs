@@ -25,7 +25,7 @@ namespace SistemaLivros.Tests.API.Validators.Request.Livros
             _validator = new LivroRequestValidator(_autorRepositoryMock.Object, _generoRepositoryMock.Object);
             
             // Configuração padrão para os mocks
-            var autor = new Autor("Nome do Autor", "Biografia");
+            var autor = new Autor("Nome do Autor", "Biografia", new DateTime(1980, 1, 1));
             var genero = new Genero("Nome do Gênero", "Descrição");
             
             _autorRepositoryMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(autor);

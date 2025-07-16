@@ -93,17 +93,42 @@ namespace SistemaLivros.Infrastructure.Queries
 
         public async Task<LivroDetalhesDto> GetDetalhesAsync(int id)
         {
-            const string sql = @"
-                SELECT l.Id, l.Titulo, l.Ano, l.DataCadastro,
-                       l.GeneroId, g.Nome as GeneroNome, g.Descricao as GeneroDescricao,
-                       l.AutorId, a.Nome as AutorNome, a.Biografia as AutorBiografia
-                FROM Livros l
-                INNER JOIN Generos g ON l.GeneroId = g.Id
-                INNER JOIN Autores a ON l.AutorId = a.Id
-                WHERE l.Id = @Id";
+            // 1. Buscar o livro básico
+            const string livroSql = @"SELECT l.Id, l.Titulo, l.Ano, l.GeneroId, l.AutorId 
+                            FROM Livros l WHERE l.Id = @Id";
             
             using var connection = _context.CreateConnection();
-            return await connection.QueryFirstOrDefaultAsync<LivroDetalhesDto>(sql, new { Id = id });
+            var livro = await connection.QueryFirstOrDefaultAsync<LivroDetalhesDto>(livroSql, new { Id = id });
+            
+            if (livro == null)
+                return null;
+                
+            // 2. Buscar detalhes do autor associado
+            const string autorSql = @"SELECT a.Id, a.Nome as AutorNome, a.Biografia as AutorBiografia 
+                                    FROM Autores a WHERE a.Id = @AutorId";
+                
+            var autorDetalhes = await connection.QueryFirstOrDefaultAsync<dynamic>(autorSql, new { AutorId = livro.AutorId });
+            
+            // 3. Buscar detalhes do gênero associado
+            const string generoSql = @"SELECT g.Id, g.Nome as GeneroNome, g.Descricao as GeneroDescricao 
+                                     FROM Generos g WHERE g.Id = @GeneroId";
+                
+            var generoDetalhes = await connection.QueryFirstOrDefaultAsync<dynamic>(generoSql, new { GeneroId = livro.GeneroId });
+            
+            // 4. Preencher os detalhes do livro com as informações do autor e gênero
+            if (autorDetalhes != null)
+            {
+                livro.AutorNome = autorDetalhes.AutorNome;
+                livro.AutorBiografia = autorDetalhes.AutorBiografia;
+            }
+            
+            if (generoDetalhes != null)
+            {
+                livro.GeneroNome = generoDetalhes.GeneroNome;
+                livro.GeneroDescricao = generoDetalhes.GeneroDescricao;
+            }
+            
+            return livro;
         }
     }
 }

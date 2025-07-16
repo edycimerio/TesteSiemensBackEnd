@@ -17,8 +17,8 @@ namespace SistemaLivros.API.Validators.Request.Autores
                 .When(x => !string.IsNullOrEmpty(x.Biografia));
 
             RuleFor(x => x.DataNascimento)
-                .LessThanOrEqualTo(DateTime.Today).WithMessage("A data de nascimento não pode ser no futuro")
-                .When(x => x.DataNascimento.HasValue);
+                .NotEmpty().WithMessage("A data de nascimento do autor é obrigatória")
+                .LessThanOrEqualTo(DateTime.Today).WithMessage("A data de nascimento não pode ser no futuro");
         }
     }
 }

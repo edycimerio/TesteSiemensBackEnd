@@ -17,7 +17,7 @@ namespace SistemaLivros.Application.Commands.Autores
 
         public async Task<int> Handle(CreateAutorCommand request, CancellationToken cancellationToken)
         {
-            var autor = new Autor(request.Nome, request.Biografia);
+            var autor = new Autor(request.Nome, request.Biografia, request.DataNascimento);
             
             await _autorRepository.AddAsync(autor);
             

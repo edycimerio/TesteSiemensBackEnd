@@ -35,41 +35,30 @@ namespace SistemaLivros.Infrastructure.Queries
 
         public async Task<GeneroDetalhesDto> GetDetalhesAsync(int id)
         {
-            const string sql = @"
-                SELECT g.Id, g.Nome, g.Descricao,
-                       l.Id as LivroId, l.Titulo, l.Ano, l.GeneroId, g.Nome as GeneroNome,
-                       l.AutorId, a.Nome as AutorNome
-                FROM Generos g
-                LEFT JOIN Livros l ON g.Id = l.GeneroId
-                LEFT JOIN Autores a ON l.AutorId = a.Id
-                WHERE g.Id = @Id";
+            // Primeiro, busca o gênero básico
+            const string generoSql = @"SELECT Id, Nome, Descricao FROM Generos WHERE Id = @Id";
             
             using var connection = _context.CreateConnection();
+            var genero = await connection.QueryFirstOrDefaultAsync<GeneroDetalhesDto>(generoSql, new { Id = id });
             
-            var generoDicionario = new Dictionary<int, GeneroDetalhesDto>();
+            if (genero == null)
+                return null;
+                
+            // Depois, busca os livros associados a este gênero
+            const string livrosSql = @"
+                SELECT l.Id, l.Titulo, l.Ano, l.GeneroId, g.Nome as GeneroNome,
+                       l.AutorId, a.Nome as AutorNome
+                FROM Livros l
+                INNER JOIN Generos g ON l.GeneroId = g.Id
+                LEFT JOIN Autores a ON l.AutorId = a.Id
+                WHERE l.GeneroId = @GeneroId";
+                
+            var livros = await connection.QueryAsync<LivroDto>(livrosSql, new { GeneroId = id });
             
-            var resultado = await connection.QueryAsync<GeneroDetalhesDto, LivroDto, GeneroDetalhesDto>(
-                sql,
-                (genero, livro) => {
-                    if (!generoDicionario.TryGetValue(genero.Id, out var generoEntry))
-                    {
-                        generoEntry = genero;
-                        generoEntry.Livros = new List<LivroDto>();
-                        generoDicionario.Add(genero.Id, generoEntry);
-                    }
-                    
-                    if (livro != null && livro.Id != 0)
-                    {
-                        generoEntry.Livros.Add(livro);
-                    }
-                    
-                    return generoEntry;
-                },
-                new { Id = id },
-                splitOn: "LivroId"
-            );
+            // Associa os livros ao gênero
+            genero.Livros = livros.ToList();
             
-            return generoDicionario.Values.FirstOrDefault();
+            return genero;
         }
     }
 }

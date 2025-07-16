@@ -67,6 +67,19 @@ namespace SistemaLivros.Tests.API.Validators.Request.Autores
             // Assert
             result.ShouldHaveValidationErrorFor(x => x.DataNascimento);
         }
+        
+        [Fact]
+        public void ValidaDataNascimentoObrigatoria()
+        {
+            // Arrange
+            var model = new AutorRequest { Nome = "Nome Válido", Biografia = "Uma biografia válida", DataNascimento = default };
+
+            // Act
+            var result = _validator.TestValidate(model);
+
+            // Assert
+            result.ShouldHaveValidationErrorFor(x => x.DataNascimento);
+        }
 
         [Fact]
         public void ValidaModeloValido()

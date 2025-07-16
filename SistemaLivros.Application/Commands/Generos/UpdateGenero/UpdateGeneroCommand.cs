@@ -8,6 +8,11 @@ namespace SistemaLivros.Application.Commands.Generos
         public string Nome { get; set; }
         public string Descricao { get; set; }
 
+        // Construtor sem parâmetros para o AutoMapper
+        public UpdateGeneroCommand()
+        {
+        }
+
         public UpdateGeneroCommand(int id, string nome, string descricao)
         {
             Id = id;
