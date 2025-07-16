@@ -3,7 +3,9 @@ using FluentValidation.TestHelper;
 using Moq;
 using SistemaLivros.API.Models.Request.Livros;
 using SistemaLivros.API.Validators.Request.Livros;
-using SistemaLivros.Domain.Interfaces.Repositories;
+using SistemaLivros.Domain.Entities;
+using SistemaLivros.Domain.Interfaces;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
@@ -23,8 +25,11 @@ namespace SistemaLivros.Tests.API.Validators.Request.Livros
             _validator = new LivroRequestValidator(_autorRepositoryMock.Object, _generoRepositoryMock.Object);
             
             // Configuração padrão para os mocks
-            _autorRepositoryMock.Setup(r => r.ExistsAsync(1)).ReturnsAsync(true);
-            _generoRepositoryMock.Setup(r => r.ExistsAsync(1)).ReturnsAsync(true);
+            var autor = new Autor("Nome do Autor", "Biografia");
+            var genero = new Genero("Nome do Gênero", "Descrição");
+            
+            _autorRepositoryMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(autor);
+            _generoRepositoryMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(genero);
         }
 
         [Fact]
@@ -83,7 +88,7 @@ namespace SistemaLivros.Tests.API.Validators.Request.Livros
         public async Task ValidaAutorInexistente()
         {
             // Arrange
-            _autorRepositoryMock.Setup(r => r.ExistsAsync(99)).ReturnsAsync(false);
+            _autorRepositoryMock.Setup(r => r.GetByIdAsync(99)).ReturnsAsync((Autor)null);
             var model = new LivroRequest { Titulo = "Título Válido", Ano = 2020, AutorId = 99, GeneroId = 1 };
 
             // Act
@@ -97,7 +102,7 @@ namespace SistemaLivros.Tests.API.Validators.Request.Livros
         public async Task ValidaGeneroInexistente()
         {
             // Arrange
-            _generoRepositoryMock.Setup(r => r.ExistsAsync(99)).ReturnsAsync(false);
+            _generoRepositoryMock.Setup(r => r.GetByIdAsync(99)).ReturnsAsync((Genero)null);
             var model = new LivroRequest { Titulo = "Título Válido", Ano = 2020, AutorId = 1, GeneroId = 99 };
 
             // Act

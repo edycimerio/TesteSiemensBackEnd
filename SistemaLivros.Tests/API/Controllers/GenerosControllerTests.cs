@@ -5,9 +5,7 @@ using Moq;
 using SistemaLivros.API.Controllers;
 using SistemaLivros.API.Models.Request.Generos;
 using SistemaLivros.API.Models.Response.Generos;
-using SistemaLivros.Application.Commands.Generos.CreateGenero;
-using SistemaLivros.Application.Commands.Generos.DeleteGenero;
-using SistemaLivros.Application.Commands.Generos.UpdateGenero;
+using SistemaLivros.Application.Commands.Generos;
 using SistemaLivros.Application.DTOs;
 using SistemaLivros.Application.Queries.Generos.GetAllGeneros;
 using SistemaLivros.Application.Queries.Generos.GetGeneroById;
@@ -105,7 +103,7 @@ namespace SistemaLivros.Tests.API.Controllers
         {
             // Arrange
             var request = new GeneroRequest { Nome = "Ficção Científica", Descricao = "Livros de ficção científica" };
-            var command = new CreateGeneroCommand { Nome = "Ficção Científica", Descricao = "Livros de ficção científica" };
+            var command = new CreateGeneroCommand("Ficção Científica", "Livros de ficção científica");
             var generoDto = new GeneroDto { Id = 1, Nome = "Ficção Científica", Descricao = "Livros de ficção científica" };
             var generoResponse = new GeneroResponse { Id = 1, Nome = "Ficção Científica", Descricao = "Livros de ficção científica" };
 

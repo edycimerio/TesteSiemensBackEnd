@@ -1,9 +1,10 @@
 using AutoFixture;
 using Moq;
 using SistemaLivros.Application.DTOs;
-using SistemaLivros.Application.Interfaces.Queries;
+using SistemaLivros.Application.Interfaces;
 using SistemaLivros.Application.Queries.Generos.GetAllGeneros;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
@@ -43,7 +44,8 @@ namespace SistemaLivros.Tests.Application.Queries.Generos
             var result = await _handler.Handle(query, CancellationToken.None);
 
             // Assert
-            Assert.Equal(3, result.Count);
+            var resultList = result.ToList();
+            Assert.Equal(3, resultList.Count);
             Assert.Contains(result, g => g.Id == 1 && g.Nome == "Ficção Científica");
             Assert.Contains(result, g => g.Id == 2 && g.Nome == "Romance");
             Assert.Contains(result, g => g.Id == 3 && g.Nome == "Terror");

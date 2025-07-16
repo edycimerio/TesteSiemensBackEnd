@@ -1,8 +1,10 @@
 using AutoFixture;
 using Moq;
-using SistemaLivros.Application.Commands.Generos.CreateGenero;
+using SistemaLivros.Application.Commands.Generos;
 using SistemaLivros.Domain.Entities;
-using SistemaLivros.Domain.Interfaces.Repositories;
+using SistemaLivros.Domain.Interfaces;
+using System;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
@@ -26,20 +28,19 @@ namespace SistemaLivros.Tests.Application.Commands.Generos
         public async Task CriaGeneroComSucesso()
         {
             // Arrange
-            var command = new CreateGeneroCommand
-            {
-                Nome = "Ficção Científica",
-                Descricao = "Livros de ficção científica"
-            };
+            var command = new CreateGeneroCommand("Ficção Científica", "Livros de ficção científica");
 
-            var genero = new Genero
-            {
-                Id = 1,
-                Nome = command.Nome,
-                Descricao = command.Descricao
-            };
+            // Criar o gênero usando o construtor público
+            var genero = new Genero(command.Nome, command.Descricao);
+            
+            // Usar reflection para definir o Id para teste
+            typeof(Entity).GetProperty("Id").SetValue(genero, 1);
 
             _generoRepositoryMock.Setup(r => r.AddAsync(It.IsAny<Genero>()))
+                .Callback<Genero>(g => typeof(Entity).GetProperty("Id").SetValue(g, 1));
+                
+            // Configurar o mock para que o teste possa verificar o ID retornado
+            _generoRepositoryMock.Setup(r => r.GetByIdAsync(1))
                 .ReturnsAsync(genero);
 
             // Act
