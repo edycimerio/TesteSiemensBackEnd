@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using SistemaLivros.API.Models.Request.Generos;
 using SistemaLivros.API.Models.Response.Generos;
 using SistemaLivros.Application.Commands.Generos;
+using SistemaLivros.Application.Common;
 using SistemaLivros.Application.Queries.Generos.GetAllGeneros;
 using SistemaLivros.Application.Queries.Generos.GetGeneroById;
 using SistemaLivros.Application.Queries.Generos.GetGeneroDetalhes;
@@ -26,16 +27,18 @@ namespace SistemaLivros.API.Controllers
         }
 
         /// <summary>
-        /// Obtém todos os gêneros
+        /// Obtém todos os gêneros com paginação
         /// </summary>
-        /// <returns>Lista de gêneros</returns>
+        /// <param name="pageNumber">Número da página (padrão: 1)</param>
+        /// <param name="pageSize">Tamanho da página (padrão: 10)</param>
+        /// <returns>Lista paginada de gêneros</returns>
         [HttpGet]
-        [ProducesResponseType(typeof(IEnumerable<GeneroResponse>), 200)]
-        public async Task<IActionResult> GetAll()
+        [ProducesResponseType(typeof(PagedResult<GeneroResponse>), 200)]
+        public async Task<IActionResult> GetAll([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
         {
-            var query = new GetAllGenerosQuery();
+            var query = new GetAllGenerosQuery(pageNumber, pageSize);
             var generos = await _mediator.Send(query);
-            var response = _mapper.Map<IEnumerable<GeneroResponse>>(generos);
+            var response = _mapper.Map<PagedResult<GeneroResponse>>(generos);
             return Ok(response);
         }
 

@@ -8,6 +8,7 @@ using SistemaLivros.API.Models.Response.Livros;
 using SistemaLivros.Application.Commands.Autores;
 using SistemaLivros.Application.Commands.Generos;
 using SistemaLivros.Application.Commands.Livros;
+using SistemaLivros.Application.Common;
 using SistemaLivros.Application.DTOs;
 
 namespace SistemaLivros.API.Mappings
@@ -44,6 +45,15 @@ namespace SistemaLivros.API.Mappings
                 .ForMember(dest => dest.Autor, opt => opt.MapFrom(src => src.Autor));
             CreateMap<LivroDto, LivroSimplificadoResponse>();
             CreateMap<LivroDetalhesDto, LivroDetalhesResponse>();
+            
+            // Mapeamentos para PagedResult
+            CreateMap(typeof(PagedResult<>), typeof(PagedResult<>))
+                .ConvertUsing(typeof(PagedResultConverter<,>));
+            
+            // Mapeamentos específicos para PagedResult
+            CreateMap<PagedResult<LivroDto>, PagedResult<LivroResponse>>();
+            CreateMap<PagedResult<GeneroDto>, PagedResult<GeneroResponse>>();
+            CreateMap<PagedResult<AutorDto>, PagedResult<AutorResponse>>();
         }
     }
 }

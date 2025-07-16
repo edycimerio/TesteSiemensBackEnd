@@ -1,4 +1,5 @@
 using Dapper;
+using SistemaLivros.Application.Common;
 using SistemaLivros.Application.DTOs;
 using SistemaLivros.Application.Interfaces;
 using SistemaLivros.Infrastructure.Data;
@@ -17,12 +18,27 @@ namespace SistemaLivros.Infrastructure.Queries
             _context = context;
         }
 
-        public async Task<IEnumerable<AutorDto>> GetAllAsync()
+        public async Task<PagedResult<AutorDto>> GetAllAsync(PaginationParams paginationParams)
         {
-            const string sql = @"SELECT Id, Nome, Biografia, DataNascimento FROM Autores";
+            // 1. Buscar o total de registros para paginação
+            const string countSql = @"SELECT COUNT(*) FROM Autores";
             
             using var connection = _context.CreateConnection();
-            return await connection.QueryAsync<AutorDto>(sql);
+            var totalCount = await connection.ExecuteScalarAsync<int>(countSql);
+            
+            // 2. Buscar os autores com paginação
+            var sql = @"
+                SELECT Id, Nome, Biografia, DataNascimento 
+                FROM Autores
+                ORDER BY Id
+                OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY";
+            
+            var offset = (paginationParams.PageNumber - 1) * paginationParams.PageSize;
+            var autores = await connection.QueryAsync<AutorDto>(sql, 
+                new { Offset = offset, PageSize = paginationParams.PageSize });
+            
+            // 3. Retornar resultado paginado
+            return new PagedResult<AutorDto>(autores.ToList(), totalCount, paginationParams.PageNumber, paginationParams.PageSize);
         }
 
         public async Task<AutorDto> GetByIdAsync(int id)

@@ -1,5 +1,7 @@
 using AutoFixture;
+using FluentAssertions;
 using Moq;
+using SistemaLivros.Application.Common;
 using SistemaLivros.Application.DTOs;
 using SistemaLivros.Application.Interfaces;
 using SistemaLivros.Application.Queries.Autores;
@@ -30,7 +32,9 @@ namespace SistemaLivros.Tests.Application.Queries.Autores
         public async Task RetornaTodosAutores()
         {
             // Arrange
-            var query = new GetAllAutoresQuery();
+            var pageNumber = 1;
+            var pageSize = 10;
+            var query = new GetAllAutoresQuery(pageNumber, pageSize);
             
             var autores = new List<AutorDto>
             {
@@ -39,38 +43,50 @@ namespace SistemaLivros.Tests.Application.Queries.Autores
                 new AutorDto { Id = 3, Nome = "George Orwell", Biografia = "Escritor britânico" }
             };
 
-            _autorQueriesMock.Setup(q => q.GetAllAsync())
-                .ReturnsAsync(autores);
+            var pagedResult = new PagedResult<AutorDto>(autores, autores.Count, pageNumber, pageSize);
+
+            _autorQueriesMock.Setup(q => q.GetAllAsync(It.IsAny<PaginationParams>()))
+                .ReturnsAsync(pagedResult);
                 
             // Act
             var result = await _handler.Handle(query, CancellationToken.None);
 
             // Assert
-            var resultList = result.ToList();
-            Assert.NotNull(result);
-            Assert.Equal(3, resultList.Count);
-            Assert.Equal("Gabriel García Márquez", resultList[0].Nome);
-            Assert.Equal("J.K. Rowling", resultList[1].Nome);
-            Assert.Equal("George Orwell", resultList[2].Nome);
-            _autorQueriesMock.Verify(q => q.GetAllAsync(), Times.Once);
+            result.Should().NotBeNull();
+            result.Items.Should().HaveCount(3);
+            result.PageNumber.Should().Be(pageNumber);
+            result.PageSize.Should().Be(pageSize);
+            result.TotalPages.Should().Be(1);
+            result.Items.ElementAt(0).Nome.Should().Be("Gabriel García Márquez");
+            result.Items.ElementAt(1).Nome.Should().Be("J.K. Rowling");
+            result.Items.ElementAt(2).Nome.Should().Be("George Orwell");
+            _autorQueriesMock.Verify(q => q.GetAllAsync(It.IsAny<PaginationParams>()), Times.Once);
         }
 
         [Fact]
         public async Task RetornaListaVaziaQuandoNaoHaAutores()
         {
             // Arrange
-            var query = new GetAllAutoresQuery();
+            var pageNumber = 1;
+            var pageSize = 10;
+            var query = new GetAllAutoresQuery(pageNumber, pageSize);
             
-            _autorQueriesMock.Setup(q => q.GetAllAsync())
-                .ReturnsAsync(new List<AutorDto>());
+            var autores = new List<AutorDto>();
+            var pagedResult = new PagedResult<AutorDto>(autores, 0, pageNumber, pageSize);
+            
+            _autorQueriesMock.Setup(q => q.GetAllAsync(It.IsAny<PaginationParams>()))
+                .ReturnsAsync(pagedResult);
                 
             // Act
             var result = await _handler.Handle(query, CancellationToken.None);
 
             // Assert
-            Assert.NotNull(result);
-            Assert.Empty(result);
-            _autorQueriesMock.Verify(q => q.GetAllAsync(), Times.Once);
+            result.Should().NotBeNull();
+            result.Items.Should().BeEmpty();
+            result.PageNumber.Should().Be(pageNumber);
+            result.PageSize.Should().Be(pageSize);
+            result.TotalPages.Should().Be(0);
+            _autorQueriesMock.Verify(q => q.GetAllAsync(It.IsAny<PaginationParams>()), Times.Once);
         }
     }
 }

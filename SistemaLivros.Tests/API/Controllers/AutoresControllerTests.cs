@@ -7,6 +7,7 @@ using SistemaLivros.API.Models.Request.Autores;
 using SistemaLivros.API.Models.Response.Autores;
 using SistemaLivros.API.Models.Response.Livros;
 using SistemaLivros.Application.Commands.Autores;
+using SistemaLivros.Application.Common;
 using SistemaLivros.Application.DTOs;
 using SistemaLivros.Application.Queries.Autores.GetAllAutores;
 using SistemaLivros.Application.Queries.Autores.GetAutorById;
@@ -34,9 +35,12 @@ namespace SistemaLivros.Tests.API.Controllers
         }
 
         [Fact]
-        public async Task GetAll_DeveRetornarListaDeAutores()
+        public async Task GetAll_DeveRetornarListaDeAutoresPaginada()
         {
             // Arrange
+            int pageNumber = 1;
+            int pageSize = 10;
+            
             var autores = new List<AutorDto>
             {
                 new AutorDto { Id = 1, Nome = "J.R.R. Tolkien", Biografia = "Autor de O Senhor dos Anéis", DataNascimento = new DateTime(1892, 1, 3) },
@@ -48,20 +52,42 @@ namespace SistemaLivros.Tests.API.Controllers
                 new AutorResponse { Id = 1, Nome = "J.R.R. Tolkien", Biografia = "Autor de O Senhor dos Anéis", DataNascimento = new DateTime(1892, 1, 3) },
                 new AutorResponse { Id = 2, Nome = "George R.R. Martin", Biografia = "Autor de Game of Thrones", DataNascimento = new DateTime(1948, 9, 20) }
             };
+            
+            var pagedAutores = new PagedResult<AutorDto>
+            {
+                Items = autores,
+                PageNumber = pageNumber,
+                PageSize = pageSize,
+                TotalCount = autores.Count,
+                TotalPages = 1
+            };
+            
+            var pagedAutoresResponse = new PagedResult<AutorResponse>
+            {
+                Items = autoresResponse,
+                PageNumber = pageNumber,
+                PageSize = pageSize,
+                TotalCount = autoresResponse.Count,
+                TotalPages = 1
+            };
 
-            _mediatorMock.Setup(m => m.Send(It.IsAny<GetAllAutoresQuery>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(autores);
+            _mediatorMock.Setup(m => m.Send(It.Is<GetAllAutoresQuery>(q => q.PageNumber == pageNumber && q.PageSize == pageSize), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(pagedAutores);
 
-            _mapperMock.Setup(m => m.Map<IEnumerable<AutorResponse>>(autores))
-                .Returns(autoresResponse);
+            _mapperMock.Setup(m => m.Map<PagedResult<AutorResponse>>(pagedAutores))
+                .Returns(pagedAutoresResponse);
 
             // Act
-            var result = await _controller.GetAll();
+            var result = await _controller.GetAll(pageNumber, pageSize);
 
             // Assert
             var okResult = Assert.IsType<OkObjectResult>(result);
-            var returnValue = Assert.IsAssignableFrom<IEnumerable<AutorResponse>>(okResult.Value);
-            Assert.Equal(2, ((List<AutorResponse>)returnValue).Count);
+            var returnValue = Assert.IsType<PagedResult<AutorResponse>>(okResult.Value);
+            Assert.Equal(2, returnValue.Items.Count);
+            Assert.Equal(pageNumber, returnValue.PageNumber);
+            Assert.Equal(pageSize, returnValue.PageSize);
+            Assert.Equal(2, returnValue.TotalCount);
+            Assert.Equal(1, returnValue.TotalPages);
         }
 
         [Fact]

@@ -1,5 +1,7 @@
 using AutoFixture;
+using FluentAssertions;
 using Moq;
+using SistemaLivros.Application.Common;
 using SistemaLivros.Application.DTOs;
 using SistemaLivros.Application.Interfaces;
 using SistemaLivros.Application.Queries.Generos.GetAllGeneros;
@@ -28,6 +30,8 @@ namespace SistemaLivros.Tests.Application.Queries.Generos
         public async Task RetornaTodosGeneros()
         {
             // Arrange
+            var pageNumber = 1;
+            var pageSize = 10;
             var generos = new List<GeneroDto>
             {
                 new GeneroDto { Id = 1, Nome = "Ficção Científica", Descricao = "Livros de ficção científica" },
@@ -35,21 +39,26 @@ namespace SistemaLivros.Tests.Application.Queries.Generos
                 new GeneroDto { Id = 3, Nome = "Terror", Descricao = "Livros de terror" }
             };
 
-            _generoQueriesMock.Setup(q => q.GetAllAsync())
-                .ReturnsAsync(generos);
+            var pagedResult = new PagedResult<GeneroDto>(generos, generos.Count, pageNumber, pageSize);
 
-            var query = new GetAllGenerosQuery();
+            _generoQueriesMock.Setup(q => q.GetAllAsync(It.IsAny<PaginationParams>()))
+                .ReturnsAsync(pagedResult);
+
+            var query = new GetAllGenerosQuery(pageNumber, pageSize);
 
             // Act
             var result = await _handler.Handle(query, CancellationToken.None);
 
             // Assert
-            var resultList = result.ToList();
-            Assert.Equal(3, resultList.Count);
-            Assert.Contains(result, g => g.Id == 1 && g.Nome == "Ficção Científica");
-            Assert.Contains(result, g => g.Id == 2 && g.Nome == "Romance");
-            Assert.Contains(result, g => g.Id == 3 && g.Nome == "Terror");
-            _generoQueriesMock.Verify(q => q.GetAllAsync(), Times.Once);
+            result.Should().NotBeNull();
+            result.Items.Should().HaveCount(3);
+            result.PageNumber.Should().Be(pageNumber);
+            result.PageSize.Should().Be(pageSize);
+            result.TotalPages.Should().Be(1);
+            result.Items.Should().Contain(g => g.Id == 1 && g.Nome == "Ficção Científica");
+            result.Items.Should().Contain(g => g.Id == 2 && g.Nome == "Romance");
+            result.Items.Should().Contain(g => g.Id == 3 && g.Nome == "Terror");
+            _generoQueriesMock.Verify(q => q.GetAllAsync(It.IsAny<PaginationParams>()), Times.Once);
         }
     }
 }

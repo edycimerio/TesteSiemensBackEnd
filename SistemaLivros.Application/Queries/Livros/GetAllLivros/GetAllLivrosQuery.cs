@@ -1,11 +1,27 @@
 using MediatR;
+using SistemaLivros.Application.Common;
 using SistemaLivros.Application.DTOs;
-using System.Collections.Generic;
 
 namespace SistemaLivros.Application.Queries.Livros.GetAllLivros
 {
-    public class GetAllLivrosQuery : IRequest<IEnumerable<LivroDto>>
+    public class GetAllLivrosQuery : IRequest<PagedResult<LivroDto>>
     {
-        // Não precisa de parâmetros, pois é uma consulta para todos os livros
+        public int PageNumber { get; set; } = 1;
+        public int PageSize { get; set; } = 10;
+        
+        public GetAllLivrosQuery()
+        {
+        }
+        
+        public GetAllLivrosQuery(int pageNumber, int pageSize)
+        {
+            PageNumber = pageNumber;
+            PageSize = pageSize;
+        }
+        
+        public PaginationParams GetPaginationParams()
+        {
+            return new PaginationParams(PageNumber, PageSize);
+        }
     }
 }

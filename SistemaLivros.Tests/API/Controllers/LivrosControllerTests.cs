@@ -9,6 +9,7 @@ using SistemaLivros.API.Controllers;
 using SistemaLivros.API.Models.Request.Livros;
 using SistemaLivros.API.Models.Response.Livros;
 using SistemaLivros.Application.Commands.Livros;
+using SistemaLivros.Application.Common;
 using SistemaLivros.Application.DTOs;
 using SistemaLivros.Application.Queries.Livros.GetAllLivros;
 using SistemaLivros.Application.Queries.Livros.GetLivroById;
@@ -47,26 +48,50 @@ namespace SistemaLivros.Tests.API.Controllers
         }
 
         [Fact]
-        public async Task GetAll_RetornaListaDeLivros()
+        public async Task GetAll_RetornaListaDeLivrosPaginada()
         {
             // Arrange
+            int pageNumber = 1;
+            int pageSize = 10;
             var livrosDto = _fixture.CreateMany<LivroDto>(3).ToList();
             var livrosResponse = _fixture.CreateMany<LivroResponse>(3).ToList();
+            
+            var pagedLivrosDto = new PagedResult<LivroDto>
+            {
+                Items = livrosDto,
+                PageNumber = pageNumber,
+                PageSize = pageSize,
+                TotalCount = livrosDto.Count,
+                TotalPages = 1
+            };
+            
+            var pagedLivrosResponse = new PagedResult<LivroResponse>
+            {
+                Items = livrosResponse,
+                PageNumber = pageNumber,
+                PageSize = pageSize,
+                TotalCount = livrosResponse.Count,
+                TotalPages = 1
+            };
 
-            _mediatorMock.Setup(m => m.Send(It.IsAny<GetAllLivrosQuery>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(livrosDto);
+            _mediatorMock.Setup(m => m.Send(It.Is<GetAllLivrosQuery>(q => q.PageNumber == pageNumber && q.PageSize == pageSize), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(pagedLivrosDto);
 
-            _mapperMock.Setup(m => m.Map<IEnumerable<LivroResponse>>(livrosDto))
-                .Returns(livrosResponse);
+            _mapperMock.Setup(m => m.Map<PagedResult<LivroResponse>>(pagedLivrosDto))
+                .Returns(pagedLivrosResponse);
 
             // Act
-            var result = await _controller.GetAll();
+            var result = await _controller.GetAll(pageNumber, pageSize);
 
             // Assert
             var okResult = Assert.IsType<OkObjectResult>(result);
-            var returnValue = Assert.IsAssignableFrom<IEnumerable<LivroResponse>>(okResult.Value);
-            Assert.Equal(livrosResponse, returnValue);
-            _mediatorMock.Verify(m => m.Send(It.IsAny<GetAllLivrosQuery>(), It.IsAny<CancellationToken>()), Times.Once);
+            var returnValue = Assert.IsType<PagedResult<LivroResponse>>(okResult.Value);
+            Assert.Equal(pagedLivrosResponse.Items.Count, returnValue.Items.Count);
+            Assert.Equal(pageNumber, returnValue.PageNumber);
+            Assert.Equal(pageSize, returnValue.PageSize);
+            Assert.Equal(livrosDto.Count, returnValue.TotalCount);
+            Assert.Equal(1, returnValue.TotalPages);
+            _mediatorMock.Verify(m => m.Send(It.Is<GetAllLivrosQuery>(q => q.PageNumber == pageNumber && q.PageSize == pageSize), It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Fact]
@@ -152,51 +177,99 @@ namespace SistemaLivros.Tests.API.Controllers
         }
 
         [Fact]
-        public async Task GetByGenero_RetornaLivrosPorGenero()
+        public async Task GetByGenero_RetornaLivrosPorGeneroPaginados()
         {
             // Arrange
             var generoId = 1;
+            int pageNumber = 1;
+            int pageSize = 10;
             var livrosDto = _fixture.CreateMany<LivroDto>(2).ToList();
             var livrosResponse = _fixture.CreateMany<LivroResponse>(2).ToList();
+            
+            var pagedLivrosDto = new PagedResult<LivroDto>
+            {
+                Items = livrosDto,
+                PageNumber = pageNumber,
+                PageSize = pageSize,
+                TotalCount = livrosDto.Count,
+                TotalPages = 1
+            };
+            
+            var pagedLivrosResponse = new PagedResult<LivroResponse>
+            {
+                Items = livrosResponse,
+                PageNumber = pageNumber,
+                PageSize = pageSize,
+                TotalCount = livrosResponse.Count,
+                TotalPages = 1
+            };
 
-            _mediatorMock.Setup(m => m.Send(It.Is<GetLivrosByGeneroQuery>(q => q.GeneroId == generoId), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(livrosDto);
+            _mediatorMock.Setup(m => m.Send(It.Is<GetLivrosByGeneroQuery>(q => q.GeneroId == generoId && q.PageNumber == pageNumber && q.PageSize == pageSize), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(pagedLivrosDto);
 
-            _mapperMock.Setup(m => m.Map<IEnumerable<LivroResponse>>(livrosDto))
-                .Returns(livrosResponse);
+            _mapperMock.Setup(m => m.Map<PagedResult<LivroResponse>>(pagedLivrosDto))
+                .Returns(pagedLivrosResponse);
 
             // Act
-            var result = await _controller.GetByGenero(generoId);
+            var result = await _controller.GetByGenero(generoId, pageNumber, pageSize);
 
             // Assert
             var okResult = Assert.IsType<OkObjectResult>(result);
-            var returnValue = Assert.IsAssignableFrom<IEnumerable<LivroResponse>>(okResult.Value);
-            Assert.Equal(livrosResponse, returnValue);
-            _mediatorMock.Verify(m => m.Send(It.Is<GetLivrosByGeneroQuery>(q => q.GeneroId == generoId), It.IsAny<CancellationToken>()), Times.Once);
+            var returnValue = Assert.IsType<PagedResult<LivroResponse>>(okResult.Value);
+            Assert.Equal(pagedLivrosResponse.Items.Count, returnValue.Items.Count);
+            Assert.Equal(pageNumber, returnValue.PageNumber);
+            Assert.Equal(pageSize, returnValue.PageSize);
+            Assert.Equal(livrosDto.Count, returnValue.TotalCount);
+            Assert.Equal(1, returnValue.TotalPages);
+            _mediatorMock.Verify(m => m.Send(It.Is<GetLivrosByGeneroQuery>(q => q.GeneroId == generoId && q.PageNumber == pageNumber && q.PageSize == pageSize), It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Fact]
-        public async Task GetByAutor_RetornaLivrosPorAutor()
+        public async Task GetByAutor_RetornaLivrosPorAutorPaginados()
         {
             // Arrange
             var autorId = 1;
+            int pageNumber = 1;
+            int pageSize = 10;
             var livrosDto = _fixture.CreateMany<LivroDto>(2).ToList();
             var livrosResponse = _fixture.CreateMany<LivroResponse>(2).ToList();
+            
+            var pagedLivrosDto = new PagedResult<LivroDto>
+            {
+                Items = livrosDto,
+                PageNumber = pageNumber,
+                PageSize = pageSize,
+                TotalCount = livrosDto.Count,
+                TotalPages = 1
+            };
+            
+            var pagedLivrosResponse = new PagedResult<LivroResponse>
+            {
+                Items = livrosResponse,
+                PageNumber = pageNumber,
+                PageSize = pageSize,
+                TotalCount = livrosResponse.Count,
+                TotalPages = 1
+            };
 
-            _mediatorMock.Setup(m => m.Send(It.Is<GetLivrosByAutorQuery>(q => q.AutorId == autorId), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(livrosDto);
+            _mediatorMock.Setup(m => m.Send(It.Is<GetLivrosByAutorQuery>(q => q.AutorId == autorId && q.PageNumber == pageNumber && q.PageSize == pageSize), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(pagedLivrosDto);
 
-            _mapperMock.Setup(m => m.Map<IEnumerable<LivroResponse>>(livrosDto))
-                .Returns(livrosResponse);
+            _mapperMock.Setup(m => m.Map<PagedResult<LivroResponse>>(pagedLivrosDto))
+                .Returns(pagedLivrosResponse);
 
             // Act
-            var result = await _controller.GetByAutor(autorId);
+            var result = await _controller.GetByAutor(autorId, pageNumber, pageSize);
 
             // Assert
             var okResult = Assert.IsType<OkObjectResult>(result);
-            var returnValue = Assert.IsAssignableFrom<IEnumerable<LivroResponse>>(okResult.Value);
-            Assert.Equal(livrosResponse, returnValue);
-            _mediatorMock.Verify(m => m.Send(It.Is<GetLivrosByAutorQuery>(q => q.AutorId == autorId), It.IsAny<CancellationToken>()), Times.Once);
+            var returnValue = Assert.IsType<PagedResult<LivroResponse>>(okResult.Value);
+            Assert.Equal(pagedLivrosResponse.Items.Count, returnValue.Items.Count);
+            Assert.Equal(pageNumber, returnValue.PageNumber);
+            Assert.Equal(pageSize, returnValue.PageSize);
+            Assert.Equal(livrosDto.Count, returnValue.TotalCount);
+            Assert.Equal(1, returnValue.TotalPages);
+            _mediatorMock.Verify(m => m.Send(It.Is<GetLivrosByAutorQuery>(q => q.AutorId == autorId && q.PageNumber == pageNumber && q.PageSize == pageSize), It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Fact]
@@ -204,22 +277,26 @@ namespace SistemaLivros.Tests.API.Controllers
         {
             // Arrange
             var termo = "fantasia";
+            var pageNumber = 1;
+            var pageSize = 10;
             var livrosDto = _fixture.CreateMany<LivroDto>(2).ToList();
+            var pagedResult = new PagedResult<LivroDto>(livrosDto, pageNumber, pageSize, livrosDto.Count);
             var livrosResponse = _fixture.CreateMany<LivroResponse>(2).ToList();
+            var pagedResponse = new PagedResult<LivroResponse>(livrosResponse, pageNumber, pageSize, livrosResponse.Count);
 
-            _mediatorMock.Setup(m => m.Send(It.Is<SearchLivrosQuery>(q => q.Termo == termo), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(livrosDto);
+            _mediatorMock.Setup(m => m.Send(It.IsAny<SearchLivrosQuery>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(pagedResult);
 
-            _mapperMock.Setup(m => m.Map<IEnumerable<LivroResponse>>(livrosDto))
-                .Returns(livrosResponse);
+            _mapperMock.Setup(m => m.Map<PagedResult<LivroResponse>>(pagedResult))
+                .Returns(pagedResponse);
 
             // Act
-            var result = await _controller.Search(termo);
+            var result = await _controller.Search(termo, pageNumber, pageSize);
 
             // Assert
             var okResult = Assert.IsType<OkObjectResult>(result);
-            var returnValue = Assert.IsAssignableFrom<IEnumerable<LivroResponse>>(okResult.Value);
-            Assert.Equal(livrosResponse, returnValue);
+            var returnValue = Assert.IsAssignableFrom<PagedResult<LivroResponse>>(okResult.Value);
+            Assert.Equal(pagedResponse, returnValue);
             _mediatorMock.Verify(m => m.Send(It.Is<SearchLivrosQuery>(q => q.Termo == termo), It.IsAny<CancellationToken>()), Times.Once);
         }
 

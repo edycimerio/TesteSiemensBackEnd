@@ -1,13 +1,13 @@
 using MediatR;
+using SistemaLivros.Application.Common;
 using SistemaLivros.Application.DTOs;
 using SistemaLivros.Application.Interfaces;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace SistemaLivros.Application.Queries.Livros.GetLivrosByAutor
 {
-    public class GetLivrosByAutorQueryHandler : IRequestHandler<GetLivrosByAutorQuery, IEnumerable<LivroDto>>
+    public class GetLivrosByAutorQueryHandler : IRequestHandler<GetLivrosByAutorQuery, PagedResult<LivroDto>>
     {
         private readonly ILivroQueries _livroQueries;
 
@@ -16,9 +16,10 @@ namespace SistemaLivros.Application.Queries.Livros.GetLivrosByAutor
             _livroQueries = livroQueries;
         }
 
-        public async Task<IEnumerable<LivroDto>> Handle(GetLivrosByAutorQuery request, CancellationToken cancellationToken)
+        public async Task<PagedResult<LivroDto>> Handle(GetLivrosByAutorQuery request, CancellationToken cancellationToken)
         {
-            return await _livroQueries.GetByAutorIdAsync(request.AutorId);
+            var paginationParams = request.GetPaginationParams();
+            return await _livroQueries.GetByAutorIdAsync(request.AutorId, paginationParams);
         }
     }
 }

@@ -6,6 +6,7 @@ using SistemaLivros.API.Models.Request.Livros;
 using SistemaLivros.API.Models.Response.Livros;
 using SistemaLivros.API.Validators.Request.Livros;
 using SistemaLivros.Application.Commands.Livros;
+using SistemaLivros.Application.Common;
 using SistemaLivros.Application.Queries.Livros.GetAllLivros;
 using SistemaLivros.Application.Queries.Livros.GetLivroById;
 using SistemaLivros.Application.Queries.Livros.GetLivroDetalhes;
@@ -32,16 +33,18 @@ namespace SistemaLivros.API.Controllers
         }
 
         /// <summary>
-        /// Obtém todos os livros
+        /// Obtém todos os livros com paginação
         /// </summary>
-        /// <returns>Lista de livros</returns>
+        /// <param name="pageNumber">Número da página (padrão: 1)</param>
+        /// <param name="pageSize">Tamanho da página (padrão: 10)</param>
+        /// <returns>Lista paginada de livros</returns>
         [HttpGet]
-        [ProducesResponseType(typeof(IEnumerable<LivroResponse>), 200)]
-        public async Task<IActionResult> GetAll()
+        [ProducesResponseType(typeof(PagedResult<LivroResponse>), 200)]
+        public async Task<IActionResult> GetAll([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
         {
-            var query = new GetAllLivrosQuery();
+            var query = new GetAllLivrosQuery(pageNumber, pageSize);
             var livros = await _mediator.Send(query);
-            var response = _mapper.Map<IEnumerable<LivroResponse>>(livros);
+            var response = _mapper.Map<PagedResult<LivroResponse>>(livros);
             return Ok(response);
         }
 
@@ -84,47 +87,53 @@ namespace SistemaLivros.API.Controllers
         }
 
         /// <summary>
-        /// Obtém livros por gênero
+        /// Obtém livros por gênero com paginação
         /// </summary>
         /// <param name="generoId">ID do gênero</param>
-        /// <returns>Lista de livros do gênero</returns>
+        /// <param name="pageNumber">Número da página (padrão: 1)</param>
+        /// <param name="pageSize">Tamanho da página (padrão: 10)</param>
+        /// <returns>Lista paginada de livros do gênero</returns>
         [HttpGet("porGenero/{generoId}")]
-        [ProducesResponseType(typeof(IEnumerable<LivroResponse>), 200)]
-        public async Task<IActionResult> GetByGenero(int generoId)
+        [ProducesResponseType(typeof(PagedResult<LivroResponse>), 200)]
+        public async Task<IActionResult> GetByGenero(int generoId, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
         {
-            var query = new GetLivrosByGeneroQuery(generoId);
+            var query = new GetLivrosByGeneroQuery(generoId, pageNumber, pageSize);
             var livros = await _mediator.Send(query);
-            var response = _mapper.Map<IEnumerable<LivroResponse>>(livros);
+            var response = _mapper.Map<PagedResult<LivroResponse>>(livros);
             return Ok(response);
         }
 
         /// <summary>
-        /// Obtém livros por autor
+        /// Obtém livros por autor com paginação
         /// </summary>
         /// <param name="autorId">ID do autor</param>
-        /// <returns>Lista de livros do autor</returns>
+        /// <param name="pageNumber">Número da página (padrão: 1)</param>
+        /// <param name="pageSize">Tamanho da página (padrão: 10)</param>
+        /// <returns>Lista paginada de livros do autor</returns>
         [HttpGet("porAutor/{autorId}")]
-        [ProducesResponseType(typeof(IEnumerable<LivroResponse>), 200)]
-        public async Task<IActionResult> GetByAutor(int autorId)
+        [ProducesResponseType(typeof(PagedResult<LivroResponse>), 200)]
+        public async Task<IActionResult> GetByAutor(int autorId, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
         {
-            var query = new GetLivrosByAutorQuery(autorId);
+            var query = new GetLivrosByAutorQuery(autorId, pageNumber, pageSize);
             var livros = await _mediator.Send(query);
-            var response = _mapper.Map<IEnumerable<LivroResponse>>(livros);
+            var response = _mapper.Map<PagedResult<LivroResponse>>(livros);
             return Ok(response);
         }
 
         /// <summary>
-        /// Pesquisa livros por termo
+        /// Pesquisa livros por termo com paginação
         /// </summary>
         /// <param name="termo">Termo de pesquisa</param>
-        /// <returns>Lista de livros encontrados</returns>
+        /// <param name="pageNumber">Número da página (padrão: 1)</param>
+        /// <param name="pageSize">Tamanho da página (padrão: 10)</param>
+        /// <returns>Lista paginada de livros encontrados</returns>
         [HttpGet("pesquisa")]
-        [ProducesResponseType(typeof(IEnumerable<LivroResponse>), 200)]
-        public async Task<IActionResult> Search([FromQuery] string termo)
+        [ProducesResponseType(typeof(PagedResult<LivroResponse>), 200)]
+        public async Task<IActionResult> Search([FromQuery] string termo, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
         {
-            var query = new SearchLivrosQuery(termo);
+            var query = new SearchLivrosQuery(termo, pageNumber, pageSize);
             var livros = await _mediator.Send(query);
-            var response = _mapper.Map<IEnumerable<LivroResponse>>(livros);
+            var response = _mapper.Map<PagedResult<LivroResponse>>(livros);
             return Ok(response);
         }
 

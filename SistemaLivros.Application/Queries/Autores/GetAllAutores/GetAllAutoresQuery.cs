@@ -1,11 +1,23 @@
 using MediatR;
+using SistemaLivros.Application.Common;
 using SistemaLivros.Application.DTOs;
-using System.Collections.Generic;
 
 namespace SistemaLivros.Application.Queries.Autores.GetAllAutores
 {
-    public class GetAllAutoresQuery : IRequest<IEnumerable<AutorDto>>
+    public class GetAllAutoresQuery : IRequest<PagedResult<AutorDto>>
     {
-        // Não precisa de parâmetros, pois é uma consulta para todos os autores
+        public int PageNumber { get; set; } = 1;
+        public int PageSize { get; set; } = 10;
+        
+        public GetAllAutoresQuery(int pageNumber = 1, int pageSize = 10)
+        {
+            PageNumber = pageNumber;
+            PageSize = pageSize;
+        }
+        
+        public PaginationParams GetPaginationParams()
+        {
+            return new PaginationParams(PageNumber, PageSize);
+        }
     }
 }

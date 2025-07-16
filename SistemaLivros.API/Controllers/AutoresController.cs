@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using SistemaLivros.API.Models.Request.Autores;
 using SistemaLivros.API.Models.Response.Autores;
 using SistemaLivros.Application.Commands.Autores;
+using SistemaLivros.Application.Common;
 using SistemaLivros.Application.Queries.Autores.GetAllAutores;
 using SistemaLivros.Application.Queries.Autores.GetAutorById;
 using SistemaLivros.Application.Queries.Autores.GetAutorDetalhes;
@@ -26,16 +27,18 @@ namespace SistemaLivros.API.Controllers
         }
 
         /// <summary>
-        /// Obtém todos os autores
+        /// Obtém todos os autores com paginação
         /// </summary>
-        /// <returns>Lista de autores</returns>
+        /// <param name="pageNumber">Número da página (padrão: 1)</param>
+        /// <param name="pageSize">Tamanho da página (padrão: 10)</param>
+        /// <returns>Lista paginada de autores</returns>
         [HttpGet]
-        [ProducesResponseType(typeof(IEnumerable<AutorResponse>), 200)]
-        public async Task<IActionResult> GetAll()
+        [ProducesResponseType(typeof(PagedResult<AutorResponse>), 200)]
+        public async Task<IActionResult> GetAll([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
         {
-            var query = new GetAllAutoresQuery();
+            var query = new GetAllAutoresQuery(pageNumber, pageSize);
             var autores = await _mediator.Send(query);
-            var response = _mapper.Map<IEnumerable<AutorResponse>>(autores);
+            var response = _mapper.Map<PagedResult<AutorResponse>>(autores);
             return Ok(response);
         }
 

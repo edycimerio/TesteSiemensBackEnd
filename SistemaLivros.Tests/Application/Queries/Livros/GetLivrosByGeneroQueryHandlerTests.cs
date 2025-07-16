@@ -1,5 +1,6 @@
 using AutoFixture;
 using Moq;
+using SistemaLivros.Application.Common;
 using SistemaLivros.Application.DTOs;
 using SistemaLivros.Application.Interfaces;
 using SistemaLivros.Application.Queries.Livros;
@@ -30,7 +31,9 @@ namespace SistemaLivros.Tests.Application.Queries.Livros
         {
             // Arrange
             var generoId = 1;
-            var query = new GetLivrosByGeneroQuery(generoId);
+            int pageNumber = 1;
+            int pageSize = 10;
+            var query = new GetLivrosByGeneroQuery(generoId, pageNumber, pageSize);
             
             var livros = new List<LivroDto>
             {
@@ -49,21 +52,33 @@ namespace SistemaLivros.Tests.Application.Queries.Livros
                     Generos = new List<GeneroSimplificadoDto> { new GeneroSimplificadoDto { Id = generoId, Nome = "Realismo Mágico" } }
                 }
             };
+            
+            var pagedResult = new PagedResult<LivroDto>
+            {
+                Items = livros,
+                PageNumber = pageNumber,
+                PageSize = pageSize,
+                TotalCount = livros.Count,
+                TotalPages = 1
+            };
 
-            _livroQueriesMock.Setup(q => q.GetByGeneroIdAsync(generoId))
-                .ReturnsAsync(livros);
+            _livroQueriesMock.Setup(q => q.GetByGeneroIdAsync(generoId, It.Is<PaginationParams>(p => p.PageNumber == pageNumber && p.PageSize == pageSize)))
+                .ReturnsAsync(pagedResult);
                 
             // Act
             var result = await _handler.Handle(query, CancellationToken.None);
 
             // Assert
-            var resultList = result.ToList();
             Assert.NotNull(result);
-            Assert.Equal(2, resultList.Count);
-            Assert.Equal("Cem Anos de Solidão", resultList[0].Titulo);
-            Assert.Equal("O Amor nos Tempos do Cólera", resultList[1].Titulo);
-            Assert.All(resultList, livro => Assert.Contains(livro.Generos, g => g.Id == generoId));
-            _livroQueriesMock.Verify(q => q.GetByGeneroIdAsync(generoId), Times.Once);
+            Assert.Equal(2, result.Items.Count);
+            Assert.Equal("Cem Anos de Solidão", result.Items[0].Titulo);
+            Assert.Equal("O Amor nos Tempos do Cólera", result.Items[1].Titulo);
+            Assert.All(result.Items, livro => Assert.Contains(livro.Generos, g => g.Id == generoId));
+            Assert.Equal(pageNumber, result.PageNumber);
+            Assert.Equal(pageSize, result.PageSize);
+            Assert.Equal(livros.Count, result.TotalCount);
+            Assert.Equal(1, result.TotalPages);
+            _livroQueriesMock.Verify(q => q.GetByGeneroIdAsync(generoId, It.Is<PaginationParams>(p => p.PageNumber == pageNumber && p.PageSize == pageSize)), Times.Once);
         }
 
         [Fact]
@@ -71,18 +86,33 @@ namespace SistemaLivros.Tests.Application.Queries.Livros
         {
             // Arrange
             var generoId = 99;
-            var query = new GetLivrosByGeneroQuery(generoId);
+            int pageNumber = 1;
+            int pageSize = 10;
+            var query = new GetLivrosByGeneroQuery(generoId, pageNumber, pageSize);
             
-            _livroQueriesMock.Setup(q => q.GetByGeneroIdAsync(generoId))
-                .ReturnsAsync(new List<LivroDto>());
+            var emptyPagedResult = new PagedResult<LivroDto>
+            {
+                Items = new List<LivroDto>(),
+                PageNumber = pageNumber,
+                PageSize = pageSize,
+                TotalCount = 0,
+                TotalPages = 0
+            };
+            
+            _livroQueriesMock.Setup(q => q.GetByGeneroIdAsync(generoId, It.Is<PaginationParams>(p => p.PageNumber == pageNumber && p.PageSize == pageSize)))
+                .ReturnsAsync(emptyPagedResult);
                 
             // Act
             var result = await _handler.Handle(query, CancellationToken.None);
 
             // Assert
             Assert.NotNull(result);
-            Assert.Empty(result);
-            _livroQueriesMock.Verify(q => q.GetByGeneroIdAsync(generoId), Times.Once);
+            Assert.Empty(result.Items);
+            Assert.Equal(pageNumber, result.PageNumber);
+            Assert.Equal(pageSize, result.PageSize);
+            Assert.Equal(0, result.TotalCount);
+            Assert.Equal(0, result.TotalPages);
+            _livroQueriesMock.Verify(q => q.GetByGeneroIdAsync(generoId, It.Is<PaginationParams>(p => p.PageNumber == pageNumber && p.PageSize == pageSize)), Times.Once);
         }
     }
 }
