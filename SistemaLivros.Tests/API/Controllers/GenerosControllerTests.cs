@@ -1,0 +1,136 @@
+using AutoMapper;
+using MediatR;
+using Microsoft.AspNetCore.Mvc;
+using Moq;
+using SistemaLivros.API.Controllers;
+using SistemaLivros.API.Models.Request.Generos;
+using SistemaLivros.API.Models.Response.Generos;
+using SistemaLivros.Application.Commands.Generos.CreateGenero;
+using SistemaLivros.Application.Commands.Generos.DeleteGenero;
+using SistemaLivros.Application.Commands.Generos.UpdateGenero;
+using SistemaLivros.Application.DTOs;
+using SistemaLivros.Application.Queries.Generos.GetAllGeneros;
+using SistemaLivros.Application.Queries.Generos.GetGeneroById;
+using SistemaLivros.Application.Queries.Generos.GetGeneroDetalhes;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+using Xunit;
+
+namespace SistemaLivros.Tests.API.Controllers
+{
+    public class GenerosControllerTests
+    {
+        private readonly Mock<IMediator> _mediatorMock;
+        private readonly Mock<IMapper> _mapperMock;
+        private readonly GenerosController _controller;
+
+        public GenerosControllerTests()
+        {
+            _mediatorMock = new Mock<IMediator>();
+            _mapperMock = new Mock<IMapper>();
+            _controller = new GenerosController(_mediatorMock.Object, _mapperMock.Object);
+        }
+
+        [Fact]
+        public async Task TestaGetAll()
+        {
+            // Arrange
+            var generos = new List<GeneroDto>
+            {
+                new GeneroDto { Id = 1, Nome = "Ficção Científica", Descricao = "Livros de ficção científica" },
+                new GeneroDto { Id = 2, Nome = "Romance", Descricao = "Livros de romance" }
+            };
+
+            var generosResponse = new List<GeneroResponse>
+            {
+                new GeneroResponse { Id = 1, Nome = "Ficção Científica", Descricao = "Livros de ficção científica" },
+                new GeneroResponse { Id = 2, Nome = "Romance", Descricao = "Livros de romance" }
+            };
+
+            _mediatorMock.Setup(m => m.Send(It.IsAny<GetAllGenerosQuery>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(generos);
+
+            _mapperMock.Setup(m => m.Map<IEnumerable<GeneroResponse>>(generos))
+                .Returns(generosResponse);
+
+            // Act
+            var result = await _controller.GetAll();
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            var returnValue = Assert.IsAssignableFrom<IEnumerable<GeneroResponse>>(okResult.Value);
+            Assert.Equal(2, ((List<GeneroResponse>)returnValue).Count);
+        }
+
+        [Fact]
+        public async Task TestaGetById_Existente()
+        {
+            // Arrange
+            var generoDto = new GeneroDto { Id = 1, Nome = "Ficção Científica", Descricao = "Livros de ficção científica" };
+            var generoResponse = new GeneroResponse { Id = 1, Nome = "Ficção Científica", Descricao = "Livros de ficção científica" };
+
+            _mediatorMock.Setup(m => m.Send(It.IsAny<GetGeneroByIdQuery>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(generoDto);
+
+            _mapperMock.Setup(m => m.Map<GeneroResponse>(generoDto))
+                .Returns(generoResponse);
+
+            // Act
+            var result = await _controller.GetById(1);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            var returnValue = Assert.IsType<GeneroResponse>(okResult.Value);
+            Assert.Equal(1, returnValue.Id);
+            Assert.Equal("Ficção Científica", returnValue.Nome);
+        }
+
+        [Fact]
+        public async Task TestaGetById_NaoExistente()
+        {
+            // Arrange
+            _mediatorMock.Setup(m => m.Send(It.IsAny<GetGeneroByIdQuery>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((GeneroDto)null);
+
+            // Act
+            var result = await _controller.GetById(99);
+
+            // Assert
+            Assert.IsType<NotFoundResult>(result);
+        }
+
+        [Fact]
+        public async Task TestaCreate()
+        {
+            // Arrange
+            var request = new GeneroRequest { Nome = "Ficção Científica", Descricao = "Livros de ficção científica" };
+            var command = new CreateGeneroCommand { Nome = "Ficção Científica", Descricao = "Livros de ficção científica" };
+            var generoDto = new GeneroDto { Id = 1, Nome = "Ficção Científica", Descricao = "Livros de ficção científica" };
+            var generoResponse = new GeneroResponse { Id = 1, Nome = "Ficção Científica", Descricao = "Livros de ficção científica" };
+
+            _mapperMock.Setup(m => m.Map<CreateGeneroCommand>(request))
+                .Returns(command);
+
+            _mediatorMock.Setup(m => m.Send(command, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(1);
+
+            _mediatorMock.Setup(m => m.Send(It.IsAny<GetGeneroByIdQuery>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(generoDto);
+
+            _mapperMock.Setup(m => m.Map<GeneroResponse>(generoDto))
+                .Returns(generoResponse);
+
+            // Act
+            var result = await _controller.Create(request);
+
+            // Assert
+            var createdAtResult = Assert.IsType<CreatedAtActionResult>(result);
+            Assert.Equal(nameof(GenerosController.GetById), createdAtResult.ActionName);
+            Assert.Equal(1, createdAtResult.RouteValues["id"]);
+            var returnValue = Assert.IsType<GeneroResponse>(createdAtResult.Value);
+            Assert.Equal(1, returnValue.Id);
+            Assert.Equal("Ficção Científica", returnValue.Nome);
+        }
+    }
+}
