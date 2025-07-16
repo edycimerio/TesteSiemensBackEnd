@@ -1,0 +1,128 @@
+# Arquivos e pastas específicos do .NET
+bin/
+obj/
+.vs/
+.vscode/
+*.user
+*.userosscache
+*.suo
+*.userprefs
+*.dbmdl
+*.jfm
+*.pfx
+*.publishsettings
+orleans.codegen.cs
+
+# Arquivos de build
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+build/
+bld/
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+msbuild.log
+msbuild.err
+msbuild.wrn
+
+# Arquivos do Visual Studio
+.vs/
+.vscode/
+*_i.c
+*_p.c
+*_h.h
+*.ilk
+*.meta
+*.obj
+*.iobj
+*.pch
+*.pdb
+*.ipdb
+*.pgc
+*.pgd
+*.rsp
+*.sbr
+*.tlb
+*.tli
+*.tlh
+*.tmp
+*.tmp_proj
+*_wpftmp.csproj
+*.log
+*.vspscc
+*.vssscc
+.builds
+*.pidb
+*.svclog
+*.scc
+
+# Arquivos do ReSharper
+_ReSharper*/
+*.[Rr]e[Ss]harper
+*.DotSettings.user
+
+# Arquivos do NuGet
+*.nupkg
+# Os arquivos de pacotes podem ser ignorados se estiver usando o restauro de pacotes
+**/[Pp]ackages/*
+# exceto build/, que é usado como um destino MSBuild.
+!**/[Pp]ackages/build/
+# Descomente se necessário, mas geralmente esses arquivos são regenerados quando necessário
+#!**/[Pp]ackages/repositories.config
+
+# Arquivos do SQLite
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+*.sqlite-shm
+*.sqlite-wal
+
+# Arquivos de teste
+TestResults/
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+
+# Arquivos de backup e temporários
+*~
+*.bak
+*.swp
+*.cache
+ClientBin/
+
+# Arquivos específicos do SQL Server
+*.mdf
+*.ldf
+*.ndf
+
+# Arquivos de publicação
+*.[Pp]ublish.xml
+*.azurePubxml
+*.pubxml
+*.publishproj
+
+# Arquivos de ambiente
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Arquivos de cobertura de código
+*.coverage
+*.coveragexml
+coverage/
+
+# Arquivos de logs
+logs/
+*.log
+npm-debug.log*
+
+# Outros
+.DS_Store
+Thumbs.db
