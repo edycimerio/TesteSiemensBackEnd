@@ -48,11 +48,25 @@ builder.Services.AddSwaggerGen(c =>
 // Configuração do CORS
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll",
+    // Política permissiva para desenvolvimento
+    options.AddPolicy("Development",
         builder => builder
             .AllowAnyOrigin()
             .AllowAnyMethod()
             .AllowAnyHeader());
+            
+    // Política mais restritiva para produção
+    options.AddPolicy("Production",
+        builder => builder
+            .WithOrigins(
+                "https://sistemaslivros.com",
+                "https://app.sistemaslivros.com",
+                "http://localhost:3000",
+                "http://localhost:4200")
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .WithExposedHeaders("X-Pagination")
+            .SetIsOriginAllowedToAllowWildcardSubdomains());
 });
 
 var app = builder.Build();
@@ -62,7 +76,11 @@ if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
     app.UseSwagger();
-    app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Sistema de Livros API v1"));
+    app.UseSwaggerUI(c => 
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Sistema de Livros API v1");
+        c.RoutePrefix = string.Empty; // Para definir a raiz como página do Swagger
+    });
     
     // Inicialização do banco de dados em ambiente de desenvolvimento
     using (var scope = app.Services.CreateScope())
@@ -72,8 +90,8 @@ if (app.Environment.IsDevelopment())
         try
         {
             // Inicializa o banco de dados e aplica as migrações
-            // DatabaseInitializer.InitializeAsync(services, logger).Wait();
-            // DatabaseInitializer.SeedDataAsync(services, logger).Wait();
+            DatabaseInitializer.InitializeAsync(services, logger).Wait();
+            DatabaseInitializer.SeedDataAsync(services, logger).Wait();
         }
         catch (Exception ex)
         {
@@ -89,7 +107,17 @@ else
 
 app.UseHttpsRedirection();
 app.UseRouting();
-app.UseCors("AllowAll");
+
+// Aplicar política de CORS baseada no ambiente
+if (app.Environment.IsDevelopment())
+{
+    app.UseCors("Development");
+}
+else
+{
+    app.UseCors("Production");
+}
+
 app.UseAuthorization();
 
 app.MapControllers();

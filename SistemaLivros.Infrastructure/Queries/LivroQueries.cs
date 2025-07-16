@@ -2,6 +2,7 @@ using Dapper;
 using SistemaLivros.Application.DTOs;
 using SistemaLivros.Application.Interfaces;
 using SistemaLivros.Infrastructure.Data;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -88,6 +89,21 @@ namespace SistemaLivros.Infrastructure.Queries
             
             using var connection = _context.CreateConnection();
             return await connection.QueryAsync<LivroDto>(sql, new { Termo = $"%{termo}%" });
+        }
+
+        public async Task<LivroDetalhesDto> GetDetalhesAsync(int id)
+        {
+            const string sql = @"
+                SELECT l.Id, l.Titulo, l.Ano, l.DataCadastro,
+                       l.GeneroId, g.Nome as GeneroNome, g.Descricao as GeneroDescricao,
+                       l.AutorId, a.Nome as AutorNome, a.Biografia as AutorBiografia
+                FROM Livros l
+                INNER JOIN Generos g ON l.GeneroId = g.Id
+                INNER JOIN Autores a ON l.AutorId = a.Id
+                WHERE l.Id = @Id";
+            
+            using var connection = _context.CreateConnection();
+            return await connection.QueryFirstOrDefaultAsync<LivroDetalhesDto>(sql, new { Id = id });
         }
     }
 }

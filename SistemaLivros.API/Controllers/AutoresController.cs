@@ -1,8 +1,10 @@
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using SistemaLivros.Application.Commands.Autores;
 using SistemaLivros.Application.DTOs;
-using SistemaLivros.Application.Interfaces;
-using SistemaLivros.Domain.Entities;
-using SistemaLivros.Domain.Interfaces;
+using SistemaLivros.Application.Queries.Autores.GetAllAutores;
+using SistemaLivros.Application.Queries.Autores.GetAutorById;
+using SistemaLivros.Application.Queries.Autores.GetAutorDetalhes;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -12,13 +14,11 @@ namespace SistemaLivros.API.Controllers
     [Route("api/v1/[controller]")]
     public class AutoresController : ControllerBase
     {
-        private readonly IAutorRepository _autorRepository;
-        private readonly IAutorQueries _autorQueries;
+        private readonly IMediator _mediator;
 
-        public AutoresController(IAutorRepository autorRepository, IAutorQueries autorQueries)
+        public AutoresController(IMediator mediator)
         {
-            _autorRepository = autorRepository;
-            _autorQueries = autorQueries;
+            _mediator = mediator;
         }
 
         /// <summary>
@@ -29,7 +29,8 @@ namespace SistemaLivros.API.Controllers
         [ProducesResponseType(typeof(IEnumerable<AutorDto>), 200)]
         public async Task<IActionResult> GetAll()
         {
-            var autores = await _autorQueries.GetAllAsync();
+            var query = new GetAllAutoresQuery();
+            var autores = await _mediator.Send(query);
             return Ok(autores);
         }
 
@@ -43,7 +44,8 @@ namespace SistemaLivros.API.Controllers
         [ProducesResponseType(404)]
         public async Task<IActionResult> GetById(int id)
         {
-            var autor = await _autorQueries.GetByIdAsync(id);
+            var query = new GetAutorByIdQuery(id);
+            var autor = await _mediator.Send(query);
             if (autor == null)
                 return NotFound();
 
@@ -60,7 +62,8 @@ namespace SistemaLivros.API.Controllers
         [ProducesResponseType(404)]
         public async Task<IActionResult> GetDetalhes(int id)
         {
-            var autor = await _autorQueries.GetDetalhesAsync(id);
+            var query = new GetAutorDetalhesQuery(id);
+            var autor = await _mediator.Send(query);
             if (autor == null)
                 return NotFound();
 
@@ -80,11 +83,11 @@ namespace SistemaLivros.API.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var autor = new Autor(autorDto.Nome, autorDto.Biografia);
-            await _autorRepository.AddAsync(autor);
+            var command = new CreateAutorCommand(autorDto.Nome, autorDto.Biografia);
+            var id = await _mediator.Send(command);
 
-            autorDto.Id = autor.Id;
-            return CreatedAtAction(nameof(GetById), new { id = autor.Id }, autorDto);
+            autorDto.Id = id;
+            return CreatedAtAction(nameof(GetById), new { id }, autorDto);
         }
 
         /// <summary>
@@ -105,12 +108,11 @@ namespace SistemaLivros.API.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var autor = await _autorRepository.GetByIdAsync(id);
-            if (autor == null)
-                return NotFound();
+            var command = new UpdateAutorCommand(id, autorDto.Nome, autorDto.Biografia);
+            var result = await _mediator.Send(command);
 
-            autor.Atualizar(autorDto.Nome, autorDto.Biografia);
-            await _autorRepository.UpdateAsync(autor);
+            if (!result)
+                return NotFound();
 
             return NoContent();
         }
@@ -125,11 +127,12 @@ namespace SistemaLivros.API.Controllers
         [ProducesResponseType(404)]
         public async Task<IActionResult> Delete(int id)
         {
-            var autor = await _autorRepository.GetByIdAsync(id);
-            if (autor == null)
+            var command = new DeleteAutorCommand(id);
+            var result = await _mediator.Send(command);
+
+            if (!result)
                 return NotFound();
 
-            await _autorRepository.RemoveAsync(id);
             return NoContent();
         }
     }

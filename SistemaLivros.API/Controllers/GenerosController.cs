@@ -1,8 +1,11 @@
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using SistemaLivros.Application.Commands.Generos;
+
 using SistemaLivros.Application.DTOs;
-using SistemaLivros.Application.Interfaces;
-using SistemaLivros.Domain.Entities;
-using SistemaLivros.Domain.Interfaces;
+using SistemaLivros.Application.Queries.Generos.GetAllGeneros;
+using SistemaLivros.Application.Queries.Generos.GetGeneroById;
+using SistemaLivros.Application.Queries.Generos.GetGeneroDetalhes;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -12,13 +15,11 @@ namespace SistemaLivros.API.Controllers
     [Route("api/v1/[controller]")]
     public class GenerosController : ControllerBase
     {
-        private readonly IGeneroRepository _generoRepository;
-        private readonly IGeneroQueries _generoQueries;
+        private readonly IMediator _mediator;
 
-        public GenerosController(IGeneroRepository generoRepository, IGeneroQueries generoQueries)
+        public GenerosController(IMediator mediator)
         {
-            _generoRepository = generoRepository;
-            _generoQueries = generoQueries;
+            _mediator = mediator;
         }
 
         /// <summary>
@@ -29,7 +30,8 @@ namespace SistemaLivros.API.Controllers
         [ProducesResponseType(typeof(IEnumerable<GeneroDto>), 200)]
         public async Task<IActionResult> GetAll()
         {
-            var generos = await _generoQueries.GetAllAsync();
+            var query = new GetAllGenerosQuery();
+            var generos = await _mediator.Send(query);
             return Ok(generos);
         }
 
@@ -43,7 +45,8 @@ namespace SistemaLivros.API.Controllers
         [ProducesResponseType(404)]
         public async Task<IActionResult> GetById(int id)
         {
-            var genero = await _generoQueries.GetByIdAsync(id);
+            var query = new GetGeneroByIdQuery(id);
+            var genero = await _mediator.Send(query);
             if (genero == null)
                 return NotFound();
 
@@ -60,7 +63,8 @@ namespace SistemaLivros.API.Controllers
         [ProducesResponseType(404)]
         public async Task<IActionResult> GetDetalhes(int id)
         {
-            var genero = await _generoQueries.GetDetalhesAsync(id);
+            var query = new GetGeneroDetalhesQuery(id);
+            var genero = await _mediator.Send(query);
             if (genero == null)
                 return NotFound();
 
@@ -80,11 +84,11 @@ namespace SistemaLivros.API.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var genero = new Genero(generoDto.Nome, generoDto.Descricao);
-            await _generoRepository.AddAsync(genero);
+            var command = new CreateGeneroCommand(generoDto.Nome, generoDto.Descricao);
+            var id = await _mediator.Send(command);
 
-            generoDto.Id = genero.Id;
-            return CreatedAtAction(nameof(GetById), new { id = genero.Id }, generoDto);
+            generoDto.Id = id;
+            return CreatedAtAction(nameof(GetById), new { id }, generoDto);
         }
 
         /// <summary>
@@ -105,12 +109,11 @@ namespace SistemaLivros.API.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var genero = await _generoRepository.GetByIdAsync(id);
-            if (genero == null)
-                return NotFound();
+            var command = new UpdateGeneroCommand(id, generoDto.Nome, generoDto.Descricao);
+            var result = await _mediator.Send(command);
 
-            genero.Atualizar(generoDto.Nome, generoDto.Descricao);
-            await _generoRepository.UpdateAsync(genero);
+            if (!result)
+                return NotFound();
 
             return NoContent();
         }
@@ -125,11 +128,12 @@ namespace SistemaLivros.API.Controllers
         [ProducesResponseType(404)]
         public async Task<IActionResult> Delete(int id)
         {
-            var genero = await _generoRepository.GetByIdAsync(id);
-            if (genero == null)
+            var command = new DeleteGeneroCommand(id);
+            var result = await _mediator.Send(command);
+
+            if (!result)
                 return NotFound();
 
-            await _generoRepository.RemoveAsync(id);
             return NoContent();
         }
     }

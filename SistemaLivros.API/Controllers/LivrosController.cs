@@ -1,8 +1,13 @@
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using SistemaLivros.Application.Commands.Livros;
 using SistemaLivros.Application.DTOs;
-using SistemaLivros.Application.Interfaces;
-using SistemaLivros.Domain.Entities;
-using SistemaLivros.Domain.Interfaces;
+using SistemaLivros.Application.Queries.Livros.GetAllLivros;
+using SistemaLivros.Application.Queries.Livros.GetLivroById;
+using SistemaLivros.Application.Queries.Livros.GetLivroDetalhes;
+using SistemaLivros.Application.Queries.Livros.GetLivrosByAutor;
+using SistemaLivros.Application.Queries.Livros.GetLivrosByGenero;
+using SistemaLivros.Application.Queries.Livros.SearchLivros;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -12,21 +17,11 @@ namespace SistemaLivros.API.Controllers
     [Route("api/v1/[controller]")]
     public class LivrosController : ControllerBase
     {
-        private readonly ILivroRepository _livroRepository;
-        private readonly ILivroQueries _livroQueries;
-        private readonly IGeneroRepository _generoRepository;
-        private readonly IAutorRepository _autorRepository;
+        private readonly IMediator _mediator;
 
-        public LivrosController(
-            ILivroRepository livroRepository, 
-            ILivroQueries livroQueries,
-            IGeneroRepository generoRepository,
-            IAutorRepository autorRepository)
+        public LivrosController(IMediator mediator)
         {
-            _livroRepository = livroRepository;
-            _livroQueries = livroQueries;
-            _generoRepository = generoRepository;
-            _autorRepository = autorRepository;
+            _mediator = mediator;
         }
 
         /// <summary>
@@ -37,7 +32,8 @@ namespace SistemaLivros.API.Controllers
         [ProducesResponseType(typeof(IEnumerable<LivroDto>), 200)]
         public async Task<IActionResult> GetAll()
         {
-            var livros = await _livroQueries.GetAllAsync();
+            var query = new GetAllLivrosQuery();
+            var livros = await _mediator.Send(query);
             return Ok(livros);
         }
 
@@ -51,7 +47,8 @@ namespace SistemaLivros.API.Controllers
         [ProducesResponseType(404)]
         public async Task<IActionResult> GetById(int id)
         {
-            var livro = await _livroQueries.GetByIdAsync(id);
+            var query = new GetLivroByIdQuery(id);
+            var livro = await _mediator.Send(query);
             if (livro == null)
                 return NotFound();
 
@@ -67,7 +64,8 @@ namespace SistemaLivros.API.Controllers
         [ProducesResponseType(typeof(IEnumerable<LivroDto>), 200)]
         public async Task<IActionResult> GetByGenero(int generoId)
         {
-            var livros = await _livroQueries.GetByGeneroIdAsync(generoId);
+            var query = new GetLivrosByGeneroQuery(generoId);
+            var livros = await _mediator.Send(query);
             return Ok(livros);
         }
 
@@ -80,7 +78,8 @@ namespace SistemaLivros.API.Controllers
         [ProducesResponseType(typeof(IEnumerable<LivroDto>), 200)]
         public async Task<IActionResult> GetByAutor(int autorId)
         {
-            var livros = await _livroQueries.GetByAutorIdAsync(autorId);
+            var query = new GetLivrosByAutorQuery(autorId);
+            var livros = await _mediator.Send(query);
             return Ok(livros);
         }
 
@@ -93,7 +92,8 @@ namespace SistemaLivros.API.Controllers
         [ProducesResponseType(typeof(IEnumerable<LivroDto>), 200)]
         public async Task<IActionResult> Search([FromQuery] string termo)
         {
-            var livros = await _livroQueries.SearchAsync(termo);
+            var query = new SearchLivrosQuery(termo);
+            var livros = await _mediator.Send(query);
             return Ok(livros);
         }
 
@@ -110,21 +110,22 @@ namespace SistemaLivros.API.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            // Verifica se o gênero existe
-            var genero = await _generoRepository.GetByIdAsync(livroDto.GeneroId);
-            if (genero == null)
-                return BadRequest($"Gênero com ID {livroDto.GeneroId} não encontrado.");
+            var command = new CreateLivroCommand(
+                livroDto.Titulo,
+                livroDto.Ano,
+                livroDto.GeneroId,
+                livroDto.AutorId);
 
-            // Verifica se o autor existe
-            var autor = await _autorRepository.GetByIdAsync(livroDto.AutorId);
-            if (autor == null)
-                return BadRequest($"Autor com ID {livroDto.AutorId} não encontrado.");
-
-            var livro = new Livro(livroDto.Titulo, livroDto.Ano, livroDto.GeneroId, livroDto.AutorId);
-            await _livroRepository.AddAsync(livro);
-
-            livroDto.Id = livro.Id;
-            return CreatedAtAction(nameof(GetById), new { id = livro.Id }, livroDto);
+            try
+            {
+                var id = await _mediator.Send(command);
+                livroDto.Id = id;
+                return CreatedAtAction(nameof(GetById), new { id }, livroDto);
+            }
+            catch (System.Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         /// <summary>
@@ -145,25 +146,25 @@ namespace SistemaLivros.API.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            // Verifica se o livro existe
-            var livro = await _livroRepository.GetByIdAsync(id);
-            if (livro == null)
-                return NotFound();
+            var command = new UpdateLivroCommand(
+                id,
+                livroDto.Titulo,
+                livroDto.Ano,
+                livroDto.GeneroId,
+                livroDto.AutorId);
 
-            // Verifica se o gênero existe
-            var genero = await _generoRepository.GetByIdAsync(livroDto.GeneroId);
-            if (genero == null)
-                return BadRequest($"Gênero com ID {livroDto.GeneroId} não encontrado.");
+            try
+            {
+                var result = await _mediator.Send(command);
+                if (!result)
+                    return NotFound();
 
-            // Verifica se o autor existe
-            var autor = await _autorRepository.GetByIdAsync(livroDto.AutorId);
-            if (autor == null)
-                return BadRequest($"Autor com ID {livroDto.AutorId} não encontrado.");
-
-            livro.Atualizar(livroDto.Titulo, livroDto.Ano, livroDto.GeneroId, livroDto.AutorId);
-            await _livroRepository.UpdateAsync(livro);
-
-            return NoContent();
+                return NoContent();
+            }
+            catch (System.Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         /// <summary>
@@ -176,11 +177,12 @@ namespace SistemaLivros.API.Controllers
         [ProducesResponseType(404)]
         public async Task<IActionResult> Delete(int id)
         {
-            var livro = await _livroRepository.GetByIdAsync(id);
-            if (livro == null)
+            var command = new DeleteLivroCommand(id);
+            var result = await _mediator.Send(command);
+
+            if (!result)
                 return NotFound();
 
-            await _livroRepository.RemoveAsync(id);
             return NoContent();
         }
     }
