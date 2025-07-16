@@ -1,7 +1,9 @@
+using AutoMapper;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using SistemaLivros.API.Models.Request.Livros;
+using SistemaLivros.API.Models.Response.Livros;
 using SistemaLivros.Application.Commands.Livros;
-using SistemaLivros.Application.DTOs;
 using SistemaLivros.Application.Queries.Livros.GetAllLivros;
 using SistemaLivros.Application.Queries.Livros.GetLivroById;
 using SistemaLivros.Application.Queries.Livros.GetLivroDetalhes;
@@ -18,10 +20,12 @@ namespace SistemaLivros.API.Controllers
     public class LivrosController : ControllerBase
     {
         private readonly IMediator _mediator;
+        private readonly IMapper _mapper;
 
-        public LivrosController(IMediator mediator)
+        public LivrosController(IMediator mediator, IMapper mapper)
         {
             _mediator = mediator;
+            _mapper = mapper;
         }
 
         /// <summary>
@@ -29,12 +33,13 @@ namespace SistemaLivros.API.Controllers
         /// </summary>
         /// <returns>Lista de livros</returns>
         [HttpGet]
-        [ProducesResponseType(typeof(IEnumerable<LivroDto>), 200)]
+        [ProducesResponseType(typeof(IEnumerable<LivroResponse>), 200)]
         public async Task<IActionResult> GetAll()
         {
             var query = new GetAllLivrosQuery();
             var livros = await _mediator.Send(query);
-            return Ok(livros);
+            var response = _mapper.Map<IEnumerable<LivroResponse>>(livros);
+            return Ok(response);
         }
 
         /// <summary>
@@ -43,7 +48,7 @@ namespace SistemaLivros.API.Controllers
         /// <param name="id">ID do livro</param>
         /// <returns>Livro encontrado</returns>
         [HttpGet("{id}")]
-        [ProducesResponseType(typeof(LivroDto), 200)]
+        [ProducesResponseType(typeof(LivroResponse), 200)]
         [ProducesResponseType(404)]
         public async Task<IActionResult> GetById(int id)
         {
@@ -52,7 +57,27 @@ namespace SistemaLivros.API.Controllers
             if (livro == null)
                 return NotFound();
 
-            return Ok(livro);
+            var response = _mapper.Map<LivroResponse>(livro);
+            return Ok(response);
+        }
+
+        /// <summary>
+        /// Obtém detalhes completos de um livro pelo ID
+        /// </summary>
+        /// <param name="id">ID do livro</param>
+        /// <returns>Detalhes completos do livro</returns>
+        [HttpGet("{id}/detalhes")]
+        [ProducesResponseType(typeof(LivroDetalhesResponse), 200)]
+        [ProducesResponseType(404)]
+        public async Task<IActionResult> GetDetalhes(int id)
+        {
+            var query = new GetLivroDetalhesQuery(id);
+            var livroDetalhes = await _mediator.Send(query);
+            if (livroDetalhes == null)
+                return NotFound();
+
+            var response = _mapper.Map<LivroDetalhesResponse>(livroDetalhes);
+            return Ok(response);
         }
 
         /// <summary>
@@ -61,12 +86,13 @@ namespace SistemaLivros.API.Controllers
         /// <param name="generoId">ID do gênero</param>
         /// <returns>Lista de livros do gênero</returns>
         [HttpGet("porGenero/{generoId}")]
-        [ProducesResponseType(typeof(IEnumerable<LivroDto>), 200)]
+        [ProducesResponseType(typeof(IEnumerable<LivroResponse>), 200)]
         public async Task<IActionResult> GetByGenero(int generoId)
         {
             var query = new GetLivrosByGeneroQuery(generoId);
             var livros = await _mediator.Send(query);
-            return Ok(livros);
+            var response = _mapper.Map<IEnumerable<LivroResponse>>(livros);
+            return Ok(response);
         }
 
         /// <summary>
@@ -75,12 +101,13 @@ namespace SistemaLivros.API.Controllers
         /// <param name="autorId">ID do autor</param>
         /// <returns>Lista de livros do autor</returns>
         [HttpGet("porAutor/{autorId}")]
-        [ProducesResponseType(typeof(IEnumerable<LivroDto>), 200)]
+        [ProducesResponseType(typeof(IEnumerable<LivroResponse>), 200)]
         public async Task<IActionResult> GetByAutor(int autorId)
         {
             var query = new GetLivrosByAutorQuery(autorId);
             var livros = await _mediator.Send(query);
-            return Ok(livros);
+            var response = _mapper.Map<IEnumerable<LivroResponse>>(livros);
+            return Ok(response);
         }
 
         /// <summary>
@@ -89,38 +116,40 @@ namespace SistemaLivros.API.Controllers
         /// <param name="termo">Termo de pesquisa</param>
         /// <returns>Lista de livros encontrados</returns>
         [HttpGet("pesquisa")]
-        [ProducesResponseType(typeof(IEnumerable<LivroDto>), 200)]
+        [ProducesResponseType(typeof(IEnumerable<LivroResponse>), 200)]
         public async Task<IActionResult> Search([FromQuery] string termo)
         {
             var query = new SearchLivrosQuery(termo);
             var livros = await _mediator.Send(query);
-            return Ok(livros);
+            var response = _mapper.Map<IEnumerable<LivroResponse>>(livros);
+            return Ok(response);
         }
 
         /// <summary>
         /// Cria um novo livro
         /// </summary>
-        /// <param name="livroDto">Dados do livro</param>
+        /// <param name="request">Dados do livro</param>
         /// <returns>Livro criado</returns>
         [HttpPost]
-        [ProducesResponseType(typeof(LivroDto), 201)]
+        [ProducesResponseType(typeof(LivroResponse), 201)]
         [ProducesResponseType(400)]
-        public async Task<IActionResult> Create([FromBody] LivroDto livroDto)
+        public async Task<IActionResult> Create([FromBody] LivroRequest request)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var command = new CreateLivroCommand(
-                livroDto.Titulo,
-                livroDto.Ano,
-                livroDto.GeneroId,
-                livroDto.AutorId);
+            var command = _mapper.Map<CreateLivroCommand>(request);
 
             try
             {
                 var id = await _mediator.Send(command);
-                livroDto.Id = id;
-                return CreatedAtAction(nameof(GetById), new { id }, livroDto);
+                
+                // Busca o livro criado para retornar na resposta
+                var query = new GetLivroByIdQuery(id);
+                var livro = await _mediator.Send(query);
+                var response = _mapper.Map<LivroResponse>(livro);
+                
+                return CreatedAtAction(nameof(GetById), new { id }, response);
             }
             catch (System.Exception ex)
             {
@@ -132,26 +161,19 @@ namespace SistemaLivros.API.Controllers
         /// Atualiza um livro existente
         /// </summary>
         /// <param name="id">ID do livro</param>
-        /// <param name="livroDto">Dados atualizados do livro</param>
+        /// <param name="request">Dados atualizados do livro</param>
         /// <returns>Resultado da operação</returns>
         [HttpPut("{id}")]
         [ProducesResponseType(204)]
         [ProducesResponseType(400)]
         [ProducesResponseType(404)]
-        public async Task<IActionResult> Update(int id, [FromBody] LivroDto livroDto)
+        public async Task<IActionResult> Update(int id, [FromBody] LivroRequest request)
         {
-            if (id != livroDto.Id)
-                return BadRequest("O ID do livro na URL não corresponde ao ID no corpo da requisição.");
-
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var command = new UpdateLivroCommand(
-                id,
-                livroDto.Titulo,
-                livroDto.Ano,
-                livroDto.GeneroId,
-                livroDto.AutorId);
+            var command = _mapper.Map<UpdateLivroCommand>(request);
+            command.Id = id; // Define o ID do comando a partir da rota
 
             try
             {

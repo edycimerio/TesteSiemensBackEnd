@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
+using SistemaLivros.API.Mappings;
 using SistemaLivros.Infrastructure.Data;
 using SistemaLivros.IoC;
 using System;
@@ -19,6 +20,9 @@ builder.Services.AddApplication();
 
 // Adicionar controllers
 builder.Services.AddControllers();
+
+// Configuração do AutoMapper
+builder.Services.AddAutoMapper(typeof(MappingProfile));
 
 // Configuração do Swagger
 builder.Services.AddEndpointsApiExplorer();
