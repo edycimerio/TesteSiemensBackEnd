@@ -89,7 +89,7 @@ namespace SistemaLivros.Tests.API.Controllers
         }
 
         [Fact]
-        public async Task TestaGetById_Existente()
+        public async Task TestaGetByIdExistente()
         {
             // Arrange
             var generoDto = new GeneroDto { Id = 1, Nome = "Ficção Científica", Descricao = "Livros de ficção científica" };
@@ -112,7 +112,7 @@ namespace SistemaLivros.Tests.API.Controllers
         }
 
         [Fact]
-        public async Task TestaGetById_NaoExistente()
+        public async Task TestaGetByIdNaoExistente()
         {
             // Arrange
             _mediatorMock.Setup(m => m.Send(It.Is<GetGeneroByIdQuery>(q => q.Id == 99), It.IsAny<CancellationToken>()))
@@ -159,7 +159,7 @@ namespace SistemaLivros.Tests.API.Controllers
         }
         
         [Fact]
-        public async Task TestaGetDetalhes_Existente()
+        public async Task TestaGetDetalhesExistente()
         {
             // Arrange
             var generoDetalhesDto = new GeneroDetalhesDto 
@@ -204,7 +204,7 @@ namespace SistemaLivros.Tests.API.Controllers
         }
 
         [Fact]
-        public async Task TestaGetDetalhes_NaoExistente()
+        public async Task TestaGetDetalhesNaoExistente()
         {
             // Arrange
             _mediatorMock.Setup(m => m.Send(It.Is<GetGeneroDetalhesQuery>(q => q.Id == 99), It.IsAny<CancellationToken>()))
@@ -218,7 +218,7 @@ namespace SistemaLivros.Tests.API.Controllers
         }
 
         [Fact]
-        public async Task TestaUpdate_Existente()
+        public async Task TestaUpdateExistente()
         {
             // Arrange
             var id = 1;
@@ -240,7 +240,7 @@ namespace SistemaLivros.Tests.API.Controllers
         }
 
         [Fact]
-        public async Task TestaUpdate_NaoExistente()
+        public async Task TestaUpdateNaoExistente()
         {
             // Arrange
             var id = 99;
@@ -262,7 +262,7 @@ namespace SistemaLivros.Tests.API.Controllers
         }
 
         [Fact]
-        public async Task TestaDelete_Existente()
+        public async Task TestaDeleteExistente()
         {
             // Arrange
             var id = 1;
@@ -279,7 +279,7 @@ namespace SistemaLivros.Tests.API.Controllers
         }
 
         [Fact]
-        public async Task TestaDelete_NaoExistente()
+        public async Task TestaDeleteNaoExistente()
         {
             // Arrange
             var id = 99;

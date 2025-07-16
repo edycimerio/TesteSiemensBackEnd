@@ -35,7 +35,7 @@ namespace SistemaLivros.Tests.API.Controllers
         }
 
         [Fact]
-        public async Task GetAll_DeveRetornarListaDeAutoresPaginada()
+        public async Task GetAllDeveRetornarListaDeAutoresPaginada()
         {
             // Arrange
             int pageNumber = 1;
@@ -91,7 +91,7 @@ namespace SistemaLivros.Tests.API.Controllers
         }
 
         [Fact]
-        public async Task GetById_QuandoAutorExiste_DeveRetornarAutor()
+        public async Task GetByIdQuandoAutorExisteDeveRetornarAutor()
         {
             // Arrange
             var autorDto = new AutorDto { Id = 1, Nome = "J.R.R. Tolkien", Biografia = "Autor de O Senhor dos Anéis" };
@@ -114,7 +114,7 @@ namespace SistemaLivros.Tests.API.Controllers
         }
 
         [Fact]
-        public async Task GetById_QuandoAutorNaoExiste_DeveRetornarNotFound()
+        public async Task GetByIdQuandoAutorNaoExisteDeveRetornarNotFound()
         {
             // Arrange
             _mediatorMock.Setup(m => m.Send(It.Is<GetAutorByIdQuery>(q => q.Id == 99), It.IsAny<CancellationToken>()))
@@ -128,7 +128,7 @@ namespace SistemaLivros.Tests.API.Controllers
         }
 
         [Fact]
-        public async Task GetDetalhes_QuandoAutorExiste_DeveRetornarDetalhesDoAutor()
+        public async Task GetDetalhesQuandoAutorExisteDeveRetornarDetalhesDoAutor()
         {
             // Arrange
             var autorDetalhesDto = new AutorDetalhesDto 
@@ -173,7 +173,7 @@ namespace SistemaLivros.Tests.API.Controllers
         }
 
         [Fact]
-        public async Task GetDetalhes_QuandoAutorNaoExiste_DeveRetornarNotFound()
+        public async Task GetDetalhesQuandoAutorNaoExisteDeveRetornarNotFound()
         {
             // Arrange
             _mediatorMock.Setup(m => m.Send(It.Is<GetAutorDetalhesQuery>(q => q.Id == 99), It.IsAny<CancellationToken>()))
@@ -187,7 +187,7 @@ namespace SistemaLivros.Tests.API.Controllers
         }
 
         [Fact]
-        public async Task Create_ComDadosValidos_DeveCriarAutorERetornarCreated()
+        public async Task CreateComDadosValidosDeveCriarAutorERetornarCreated()
         {
             // Arrange
             var request = new AutorRequest { Nome = "J.R.R. Tolkien", Biografia = "Autor de O Senhor dos Anéis" };
@@ -220,7 +220,7 @@ namespace SistemaLivros.Tests.API.Controllers
         }
 
         [Fact]
-        public async Task Update_QuandoAutorExiste_DeveAtualizarERetornarNoContent()
+        public async Task UpdateQuandoAutorExisteDeveAtualizarERetornarNoContent()
         {
             // Arrange
             var id = 1;
@@ -242,7 +242,7 @@ namespace SistemaLivros.Tests.API.Controllers
         }
 
         [Fact]
-        public async Task Update_QuandoAutorNaoExiste_DeveRetornarNotFound()
+        public async Task UpdateQuandoAutorNaoExisteDeveRetornarNotFound()
         {
             // Arrange
             var id = 99;
@@ -264,7 +264,7 @@ namespace SistemaLivros.Tests.API.Controllers
         }
 
         [Fact]
-        public async Task Delete_QuandoAutorExiste_DeveRemoverERetornarNoContent()
+        public async Task DeleteQuandoAutorExisteDeveRemoverERetornarNoContent()
         {
             // Arrange
             var id = 1;
@@ -281,7 +281,7 @@ namespace SistemaLivros.Tests.API.Controllers
         }
 
         [Fact]
-        public async Task Delete_QuandoAutorNaoExiste_DeveRetornarNotFound()
+        public async Task DeleteQuandoAutorNaoExisteDeveRetornarNotFound()
         {
             // Arrange
             var id = 99;

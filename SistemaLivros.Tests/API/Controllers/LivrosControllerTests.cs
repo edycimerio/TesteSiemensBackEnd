@@ -48,7 +48,7 @@ namespace SistemaLivros.Tests.API.Controllers
         }
 
         [Fact]
-        public async Task GetAll_RetornaListaDeLivrosPaginada()
+        public async Task GetAllRetornaListaDeLivrosPaginada()
         {
             // Arrange
             int pageNumber = 1;
@@ -95,7 +95,7 @@ namespace SistemaLivros.Tests.API.Controllers
         }
 
         [Fact]
-        public async Task GetById_QuandoLivroExiste_RetornaLivro()
+        public async Task GetByIdQuandoLivroExisteRetornaLivro()
         {
             // Arrange
             var id = 1;
@@ -119,7 +119,7 @@ namespace SistemaLivros.Tests.API.Controllers
         }
 
         [Fact]
-        public async Task GetById_QuandoLivroNaoExiste_RetornaNotFound()
+        public async Task GetByIdQuandoLivroNaoExisteRetornaNotFound()
         {
             // Arrange
             var id = 99;
@@ -136,7 +136,7 @@ namespace SistemaLivros.Tests.API.Controllers
         }
 
         [Fact]
-        public async Task GetDetalhes_QuandoLivroExiste_RetornaDetalhes()
+        public async Task GetDetalhesQuandoLivroExisteRetornaDetalhes()
         {
             // Arrange
             var id = 1;
@@ -160,7 +160,7 @@ namespace SistemaLivros.Tests.API.Controllers
         }
 
         [Fact]
-        public async Task GetDetalhes_QuandoLivroNaoExiste_RetornaNotFound()
+        public async Task GetDetalhesQuandoLivroNaoExisteRetornaNotFound()
         {
             // Arrange
             var id = 99;
@@ -177,7 +177,7 @@ namespace SistemaLivros.Tests.API.Controllers
         }
 
         [Fact]
-        public async Task GetByGenero_RetornaLivrosPorGeneroPaginados()
+        public async Task GetByGeneroRetornaLivrosPorGeneroPaginados()
         {
             // Arrange
             var generoId = 1;
@@ -225,7 +225,7 @@ namespace SistemaLivros.Tests.API.Controllers
         }
 
         [Fact]
-        public async Task GetByAutor_RetornaLivrosPorAutorPaginados()
+        public async Task GetByAutorRetornaLivrosPorAutorPaginados()
         {
             // Arrange
             var autorId = 1;
@@ -273,7 +273,7 @@ namespace SistemaLivros.Tests.API.Controllers
         }
 
         [Fact]
-        public async Task Search_RetornaLivrosPorTermo()
+        public async Task SearchRetornaLivrosPorTermo()
         {
             // Arrange
             var termo = "fantasia";
@@ -301,7 +301,7 @@ namespace SistemaLivros.Tests.API.Controllers
         }
 
         [Fact]
-        public async Task Create_QuandoSucesso_RetornaCreated()
+        public async Task CreateQuandoSucessoRetornaCreated()
         {
             // Arrange
             var request = _fixture.Create<LivroRequest>();
@@ -339,7 +339,7 @@ namespace SistemaLivros.Tests.API.Controllers
         }
 
         [Fact]
-        public async Task Create_QuandoErro_RetornaBadRequest()
+        public async Task CreateQuandoErroRetornaBadRequest()
         {
             // Arrange
             var request = _fixture.Create<LivroRequest>();
@@ -367,7 +367,7 @@ namespace SistemaLivros.Tests.API.Controllers
         }
         
         [Fact]
-        public async Task Create_QuandoValidacaoFalha_RetornaBadRequest()
+        public async Task CreateQuandoValidacaoFalhaRetornaBadRequest()
         {
             // Arrange
             var request = _fixture.Create<LivroRequest>();
@@ -394,7 +394,7 @@ namespace SistemaLivros.Tests.API.Controllers
         }
 
         [Fact]
-        public async Task Update_QuandoSucesso_RetornaNoContent()
+        public async Task UpdateQuandoSucessoRetornaNoContent()
         {
             // Arrange
             var id = 1;
@@ -421,7 +421,7 @@ namespace SistemaLivros.Tests.API.Controllers
         }
 
         [Fact]
-        public async Task Update_QuandoLivroNaoEncontrado_RetornaNotFound()
+        public async Task UpdateQuandoLivroNaoEncontradoRetornaNotFound()
         {
             // Arrange
             var id = 1;
@@ -448,7 +448,7 @@ namespace SistemaLivros.Tests.API.Controllers
         }
 
         [Fact]
-        public async Task Update_QuandoErro_RetornaBadRequest()
+        public async Task UpdateQuandoErroRetornaBadRequest()
         {
             // Arrange
             var id = 1;
@@ -477,7 +477,7 @@ namespace SistemaLivros.Tests.API.Controllers
         }
         
         [Fact]
-        public async Task Update_QuandoValidacaoFalha_RetornaBadRequest()
+        public async Task UpdateQuandoValidacaoFalhaRetornaBadRequest()
         {
             // Arrange
             var id = 1;
@@ -505,7 +505,7 @@ namespace SistemaLivros.Tests.API.Controllers
         }
 
         [Fact]
-        public async Task Delete_QuandoSucesso_RetornaNoContent()
+        public async Task DeleteQuandoSucessoRetornaNoContent()
         {
             // Arrange
             var id = 1;
@@ -522,7 +522,7 @@ namespace SistemaLivros.Tests.API.Controllers
         }
 
         [Fact]
-        public async Task Delete_QuandoLivroNaoExiste_RetornaNotFound()
+        public async Task DeleteQuandoLivroNaoExisteRetornaNotFound()
         {
             // Arrange
             var id = 99;
