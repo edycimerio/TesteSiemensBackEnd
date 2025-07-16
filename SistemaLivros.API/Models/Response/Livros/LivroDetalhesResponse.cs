@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using SistemaLivros.API.Models.Response.Autores;
 using SistemaLivros.API.Models.Response.Generos;
 
@@ -10,16 +11,10 @@ namespace SistemaLivros.API.Models.Response.Livros
         public string Titulo { get; set; }
         public int Ano { get; set; }
         
-        // Informações do autor
-        public int AutorId { get; set; }
-        public string AutorNome { get; set; }
-        public string AutorBiografia { get; set; }
+        // Objeto autor completo
+        public AutorResponse Autor { get; set; }
         
-        // Informações do gênero
-        public int GeneroId { get; set; }
-        public string GeneroNome { get; set; }
-        public string GeneroDescricao { get; set; }
-        
-        // Removido DataCadastro pois não existe na tabela
+        // Lista de gêneros associados ao livro
+        public List<GeneroSimplificadoResponse> Generos { get; set; } = new List<GeneroSimplificadoResponse>();
     }
 }

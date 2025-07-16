@@ -1,8 +1,10 @@
 using AutoMapper;
+using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using SistemaLivros.API.Models.Request.Livros;
 using SistemaLivros.API.Models.Response.Livros;
+using SistemaLivros.API.Validators.Request.Livros;
 using SistemaLivros.Application.Commands.Livros;
 using SistemaLivros.Application.Queries.Livros.GetAllLivros;
 using SistemaLivros.Application.Queries.Livros.GetLivroById;
@@ -11,6 +13,7 @@ using SistemaLivros.Application.Queries.Livros.GetLivrosByAutor;
 using SistemaLivros.Application.Queries.Livros.GetLivrosByGenero;
 using SistemaLivros.Application.Queries.Livros.SearchLivros;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace SistemaLivros.API.Controllers
@@ -133,8 +136,15 @@ namespace SistemaLivros.API.Controllers
         [HttpPost]
         [ProducesResponseType(typeof(LivroResponse), 201)]
         [ProducesResponseType(400)]
-        public async Task<IActionResult> Create([FromBody] LivroRequest request)
+        public async Task<IActionResult> Create([FromBody] LivroRequest request, [FromServices] IValidator<LivroRequest> validator)
         {
+            // Validação manual assíncrona
+            var validationResult = await validator.ValidateAsync(request);
+            if (!validationResult.IsValid)
+            {
+                return BadRequest(validationResult.Errors.Select(e => new { Property = e.PropertyName, Error = e.ErrorMessage }));
+            }
+
             var command = _mapper.Map<CreateLivroCommand>(request);
 
             try
@@ -164,8 +174,15 @@ namespace SistemaLivros.API.Controllers
         [ProducesResponseType(204)]
         [ProducesResponseType(400)]
         [ProducesResponseType(404)]
-        public async Task<IActionResult> Update(int id, [FromBody] LivroRequest request)
+        public async Task<IActionResult> Update(int id, [FromBody] LivroRequest request, [FromServices] IValidator<LivroRequest> validator)
         {
+            // Validação manual assíncrona
+            var validationResult = await validator.ValidateAsync(request);
+            if (!validationResult.IsValid)
+            {
+                return BadRequest(validationResult.Errors.Select(e => new { Property = e.PropertyName, Error = e.ErrorMessage }));
+            }
+
             var command = _mapper.Map<UpdateLivroCommand>(request);
             command.Id = id; // Define o ID do comando a partir da rota
 

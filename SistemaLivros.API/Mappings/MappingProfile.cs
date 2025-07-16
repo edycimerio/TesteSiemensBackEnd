@@ -25,18 +25,23 @@ namespace SistemaLivros.API.Mappings
             CreateMap<AutorRequest, UpdateAutorCommand>()
                 .ForMember(dest => dest.Id, opt => opt.Ignore()); // ID é definido na rota
             
-            CreateMap<LivroRequest, CreateLivroCommand>();
+            CreateMap<LivroRequest, CreateLivroCommand>()
+                .ForMember(dest => dest.Generos, opt => opt.MapFrom(src => src.Generos));
             CreateMap<LivroRequest, UpdateLivroCommand>()
-                .ForMember(dest => dest.Id, opt => opt.Ignore()); // ID é definido na rota
+                .ForMember(dest => dest.Id, opt => opt.Ignore()) // ID é definido na rota
+                .ForMember(dest => dest.Generos, opt => opt.MapFrom(src => src.Generos));
             
             // DTO -> Response
             CreateMap<GeneroDto, GeneroResponse>();
             CreateMap<GeneroDetalhesDto, GeneroDetalhesResponse>();
+            CreateMap<GeneroSimplificadoDto, GeneroSimplificadoResponse>();
             
             CreateMap<AutorDto, AutorResponse>();
             CreateMap<AutorDetalhesDto, AutorDetalhesResponse>();
             
-            CreateMap<LivroDto, LivroResponse>();
+            CreateMap<LivroDto, LivroResponse>()
+                .ForMember(dest => dest.Generos, opt => opt.MapFrom(src => src.Generos))
+                .ForMember(dest => dest.Autor, opt => opt.MapFrom(src => src.Autor));
             CreateMap<LivroDto, LivroSimplificadoResponse>();
             CreateMap<LivroDetalhesDto, LivroDetalhesResponse>();
         }

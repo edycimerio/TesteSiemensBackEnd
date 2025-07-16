@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+﻿using System;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -17,7 +18,8 @@ namespace SistemaLivros.Infrastructure.Migrations
                     Id = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
                     Nome = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
-                    Biografia = table.Column<string>(type: "TEXT", maxLength: 1000, nullable: false)
+                    Biografia = table.Column<string>(type: "TEXT", maxLength: 1000, nullable: false),
+                    DataNascimento = table.Column<DateTime>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -46,7 +48,6 @@ namespace SistemaLivros.Infrastructure.Migrations
                         .Annotation("Sqlite:Autoincrement", true),
                     Titulo = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
                     Ano = table.Column<int>(type: "INTEGER", nullable: false),
-                    GeneroId = table.Column<int>(type: "INTEGER", nullable: false),
                     AutorId = table.Column<int>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
@@ -58,36 +59,64 @@ namespace SistemaLivros.Infrastructure.Migrations
                         principalTable: "Autores",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "LivroGeneros",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    LivroId = table.Column<int>(type: "INTEGER", nullable: false),
+                    GeneroId = table.Column<int>(type: "INTEGER", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_LivroGeneros", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Livros_Generos_GeneroId",
+                        name: "FK_LivroGeneros_Generos_GeneroId",
                         column: x => x.GeneroId,
                         principalTable: "Generos",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_LivroGeneros_Livros_LivroId",
+                        column: x => x.LivroId,
+                        principalTable: "Livros",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_LivroGeneros_GeneroId",
+                table: "LivroGeneros",
+                column: "GeneroId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_LivroGeneros_LivroId",
+                table: "LivroGeneros",
+                column: "LivroId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Livros_AutorId",
                 table: "Livros",
                 column: "AutorId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Livros_GeneroId",
-                table: "Livros",
-                column: "GeneroId");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
+                name: "LivroGeneros");
+
+            migrationBuilder.DropTable(
+                name: "Generos");
+
+            migrationBuilder.DropTable(
                 name: "Livros");
 
             migrationBuilder.DropTable(
                 name: "Autores");
-
-            migrationBuilder.DropTable(
-                name: "Generos");
         }
     }
 }

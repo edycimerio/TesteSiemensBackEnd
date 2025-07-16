@@ -24,12 +24,12 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddApplication();
 
-// Adicionar controllers com FluentValidation
-builder.Services.AddControllers()
-    .AddFluentValidation(fv => {
-        fv.RegisterValidatorsFromAssemblyContaining<GeneroRequestValidator>();
-        fv.DisableDataAnnotationsValidation = true; // Desabilita validações com DataAnnotations
-    });
+// Adicionar controllers
+builder.Services.AddControllers();
+
+// Configurar FluentValidation manualmente (sem validação automática)
+builder.Services.AddFluentValidationClientsideAdapters(); // Para suporte a validação client-side
+builder.Services.AddValidatorsFromAssemblyContaining<GeneroRequestValidator>(); // Registra os validadores
 
 // Configuração do AutoMapper
 builder.Services.AddAutoMapper(typeof(MappingProfile));

@@ -33,9 +33,27 @@ namespace SistemaLivros.Tests.Application.Queries.Livros
             
             var livros = new List<LivroDto>
             {
-                new LivroDto { Id = 1, Titulo = "Cem Anos de Solidão", Ano = 1967, AutorId = 1, GeneroId = 1 },
-                new LivroDto { Id = 2, Titulo = "1984", Ano = 1949, AutorId = 2, GeneroId = 2 },
-                new LivroDto { Id = 3, Titulo = "O Senhor dos Anéis", Ano = 1954, AutorId = 3, GeneroId = 3 }
+                new LivroDto { 
+                    Id = 1, 
+                    Titulo = "Cem Anos de Solidão", 
+                    Ano = 1967, 
+                    Autor = new AutorDto { Id = 1, Nome = "Gabriel García Márquez" },
+                    Generos = new List<GeneroSimplificadoDto> { new GeneroSimplificadoDto { Id = 1, Nome = "Realismo Mágico" } }
+                },
+                new LivroDto { 
+                    Id = 2, 
+                    Titulo = "1984", 
+                    Ano = 1949, 
+                    Autor = new AutorDto { Id = 2, Nome = "George Orwell" },
+                    Generos = new List<GeneroSimplificadoDto> { new GeneroSimplificadoDto { Id = 2, Nome = "Ficção Distópica" } }
+                },
+                new LivroDto { 
+                    Id = 3, 
+                    Titulo = "O Senhor dos Anéis", 
+                    Ano = 1954, 
+                    Autor = new AutorDto { Id = 3, Nome = "J.R.R. Tolkien" },
+                    Generos = new List<GeneroSimplificadoDto> { new GeneroSimplificadoDto { Id = 3, Nome = "Fantasia" } }
+                }
             };
 
             _livroQueriesMock.Setup(q => q.GetAllAsync())

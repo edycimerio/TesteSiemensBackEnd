@@ -1,5 +1,7 @@
 using AutoFixture;
 using AutoMapper;
+using FluentValidation;
+using FluentValidation.Results;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
@@ -27,6 +29,7 @@ namespace SistemaLivros.Tests.API.Controllers
     {
         private readonly Mock<IMediator> _mediatorMock;
         private readonly Mock<IMapper> _mapperMock;
+        private readonly Mock<IValidator<LivroRequest>> _validatorMock;
         private readonly LivrosController _controller;
         private readonly Fixture _fixture;
 
@@ -34,8 +37,13 @@ namespace SistemaLivros.Tests.API.Controllers
         {
             _mediatorMock = new Mock<IMediator>();
             _mapperMock = new Mock<IMapper>();
+            _validatorMock = new Mock<IValidator<LivroRequest>>();
             _controller = new LivrosController(_mediatorMock.Object, _mapperMock.Object);
             _fixture = new Fixture();
+            
+            // Configuração padrão para o validador retornar sucesso
+            _validatorMock.Setup(v => v.ValidateAsync(It.IsAny<LivroRequest>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new ValidationResult());
         }
 
         [Fact]
@@ -221,7 +229,7 @@ namespace SistemaLivros.Tests.API.Controllers
             // Arrange
             var request = _fixture.Create<LivroRequest>();
             var command = _fixture.Create<CreateLivroCommand>();
-            var livroId = 1;
+            var id = 1;
             var livroDto = _fixture.Create<LivroDto>();
             var livroResponse = _fixture.Create<LivroResponse>();
 
@@ -229,24 +237,28 @@ namespace SistemaLivros.Tests.API.Controllers
                 .Returns(command);
 
             _mediatorMock.Setup(m => m.Send(command, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(livroId);
+                .ReturnsAsync(id);
 
-            _mediatorMock.Setup(m => m.Send(It.Is<GetLivroByIdQuery>(q => q.Id == livroId), It.IsAny<CancellationToken>()))
+            _mediatorMock.Setup(m => m.Send(It.Is<GetLivroByIdQuery>(q => q.Id == id), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(livroDto);
 
             _mapperMock.Setup(m => m.Map<LivroResponse>(livroDto))
                 .Returns(livroResponse);
+                
+            // Configurar validador para retornar sucesso
+            _validatorMock.Setup(v => v.ValidateAsync(request, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new ValidationResult());
 
             // Act
-            var result = await _controller.Create(request);
+            var result = await _controller.Create(request, _validatorMock.Object);
 
             // Assert
-            var createdAtResult = Assert.IsType<CreatedAtActionResult>(result);
-            Assert.Equal(nameof(LivrosController.GetById), createdAtResult.ActionName);
-            Assert.Equal(livroId, createdAtResult.RouteValues["id"]);
-            Assert.Equal(livroResponse, createdAtResult.Value);
+            var createdAtActionResult = Assert.IsType<CreatedAtActionResult>(result);
+            Assert.Equal(nameof(LivrosController.GetById), createdAtActionResult.ActionName);
+            Assert.Equal(id, createdAtActionResult.RouteValues["id"]);
+            Assert.Equal(livroResponse, createdAtActionResult.Value);
             _mediatorMock.Verify(m => m.Send(command, It.IsAny<CancellationToken>()), Times.Once);
-            _mediatorMock.Verify(m => m.Send(It.Is<GetLivroByIdQuery>(q => q.Id == livroId), It.IsAny<CancellationToken>()), Times.Once);
+            _validatorMock.Verify(v => v.ValidateAsync(request, It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Fact]
@@ -262,14 +274,46 @@ namespace SistemaLivros.Tests.API.Controllers
 
             _mediatorMock.Setup(m => m.Send(command, It.IsAny<CancellationToken>()))
                 .ThrowsAsync(new Exception(errorMessage));
+                
+            // Configurar validador para retornar sucesso
+            _validatorMock.Setup(v => v.ValidateAsync(request, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new ValidationResult());
 
             // Act
-            var result = await _controller.Create(request);
+            var result = await _controller.Create(request, _validatorMock.Object);
 
             // Assert
             var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
             Assert.Equal(errorMessage, badRequestResult.Value);
             _mediatorMock.Verify(m => m.Send(command, It.IsAny<CancellationToken>()), Times.Once);
+            _validatorMock.Verify(v => v.ValidateAsync(request, It.IsAny<CancellationToken>()), Times.Once);
+        }
+        
+        [Fact]
+        public async Task Create_QuandoValidacaoFalha_RetornaBadRequest()
+        {
+            // Arrange
+            var request = _fixture.Create<LivroRequest>();
+            var validationFailures = new List<ValidationFailure>
+            {
+                new ValidationFailure("Titulo", "O título é obrigatório"),
+                new ValidationFailure("AutorId", "O autor é obrigatório")
+            };
+            
+            // Configurar validador para retornar falha
+            _validatorMock.Setup(v => v.ValidateAsync(request, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new ValidationResult(validationFailures));
+
+            // Act
+            var result = await _controller.Create(request, _validatorMock.Object);
+
+            // Assert
+            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+            var errors = Assert.IsAssignableFrom<IEnumerable<object>>(badRequestResult.Value);
+            Assert.Equal(2, errors.Count());
+            _validatorMock.Verify(v => v.ValidateAsync(request, It.IsAny<CancellationToken>()), Times.Once);
+            // Verificar que o mediator não foi chamado, pois a validação falhou
+            _mediatorMock.Verify(m => m.Send(It.IsAny<CreateLivroCommand>(), It.IsAny<CancellationToken>()), Times.Never);
         }
 
         [Fact]
@@ -285,20 +329,25 @@ namespace SistemaLivros.Tests.API.Controllers
 
             _mediatorMock.Setup(m => m.Send(It.Is<UpdateLivroCommand>(c => c.Id == id), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(true);
+                
+            // Configurar validador para retornar sucesso
+            _validatorMock.Setup(v => v.ValidateAsync(request, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new ValidationResult());
 
             // Act
-            var result = await _controller.Update(id, request);
+            var result = await _controller.Update(id, request, _validatorMock.Object);
 
             // Assert
             Assert.IsType<NoContentResult>(result);
             _mediatorMock.Verify(m => m.Send(It.Is<UpdateLivroCommand>(c => c.Id == id), It.IsAny<CancellationToken>()), Times.Once);
+            _validatorMock.Verify(v => v.ValidateAsync(request, It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Fact]
-        public async Task Update_QuandoLivroNaoExiste_RetornaNotFound()
+        public async Task Update_QuandoLivroNaoEncontrado_RetornaNotFound()
         {
             // Arrange
-            var id = 99;
+            var id = 1;
             var request = _fixture.Create<LivroRequest>();
             var command = _fixture.Create<UpdateLivroCommand>();
 
@@ -307,13 +356,18 @@ namespace SistemaLivros.Tests.API.Controllers
 
             _mediatorMock.Setup(m => m.Send(It.Is<UpdateLivroCommand>(c => c.Id == id), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(false);
+                
+            // Configurar validador para retornar sucesso
+            _validatorMock.Setup(v => v.ValidateAsync(request, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new ValidationResult());
 
             // Act
-            var result = await _controller.Update(id, request);
+            var result = await _controller.Update(id, request, _validatorMock.Object);
 
             // Assert
             Assert.IsType<NotFoundResult>(result);
             _mediatorMock.Verify(m => m.Send(It.Is<UpdateLivroCommand>(c => c.Id == id), It.IsAny<CancellationToken>()), Times.Once);
+            _validatorMock.Verify(v => v.ValidateAsync(request, It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Fact]
@@ -330,14 +384,47 @@ namespace SistemaLivros.Tests.API.Controllers
 
             _mediatorMock.Setup(m => m.Send(It.Is<UpdateLivroCommand>(c => c.Id == id), It.IsAny<CancellationToken>()))
                 .ThrowsAsync(new Exception(errorMessage));
+                
+            // Configurar validador para retornar sucesso
+            _validatorMock.Setup(v => v.ValidateAsync(request, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new ValidationResult());
 
             // Act
-            var result = await _controller.Update(id, request);
+            var result = await _controller.Update(id, request, _validatorMock.Object);
 
             // Assert
             var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
             Assert.Equal(errorMessage, badRequestResult.Value);
             _mediatorMock.Verify(m => m.Send(It.Is<UpdateLivroCommand>(c => c.Id == id), It.IsAny<CancellationToken>()), Times.Once);
+            _validatorMock.Verify(v => v.ValidateAsync(request, It.IsAny<CancellationToken>()), Times.Once);
+        }
+        
+        [Fact]
+        public async Task Update_QuandoValidacaoFalha_RetornaBadRequest()
+        {
+            // Arrange
+            var id = 1;
+            var request = _fixture.Create<LivroRequest>();
+            var validationFailures = new List<ValidationFailure>
+            {
+                new ValidationFailure("Titulo", "O título é obrigatório"),
+                new ValidationFailure("AutorId", "O autor é obrigatório")
+            };
+            
+            // Configurar validador para retornar falha
+            _validatorMock.Setup(v => v.ValidateAsync(request, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new ValidationResult(validationFailures));
+
+            // Act
+            var result = await _controller.Update(id, request, _validatorMock.Object);
+
+            // Assert
+            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+            var errors = Assert.IsAssignableFrom<IEnumerable<object>>(badRequestResult.Value);
+            Assert.Equal(2, errors.Count());
+            _validatorMock.Verify(v => v.ValidateAsync(request, It.IsAny<CancellationToken>()), Times.Once);
+            // Verificar que o mediator não foi chamado, pois a validação falhou
+            _mediatorMock.Verify(m => m.Send(It.IsAny<UpdateLivroCommand>(), It.IsAny<CancellationToken>()), Times.Never);
         }
 
         [Fact]

@@ -34,9 +34,7 @@ namespace SistemaLivros.Tests.Application.Queries.Livros
             {
                 Id = livroId,
                 Titulo = "Cem Anos de Solidão",
-                Ano = 1967,
-                AutorId = 1,
-                GeneroId = 2
+                Ano = 1967
             };
 
             _livroQueriesMock.Setup(q => q.GetByIdAsync(livroId))
@@ -50,8 +48,6 @@ namespace SistemaLivros.Tests.Application.Queries.Livros
             Assert.Equal(livroId, result.Id);
             Assert.Equal(livroDto.Titulo, result.Titulo);
             Assert.Equal(livroDto.Ano, result.Ano);
-            Assert.Equal(livroDto.AutorId, result.AutorId);
-            Assert.Equal(livroDto.GeneroId, result.GeneroId);
             _livroQueriesMock.Verify(q => q.GetByIdAsync(livroId), Times.Once);
         }
 

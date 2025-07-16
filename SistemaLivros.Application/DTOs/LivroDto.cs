@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace SistemaLivros.Application.DTOs
 {
     public class LivroDto
@@ -5,9 +7,11 @@ namespace SistemaLivros.Application.DTOs
         public int Id { get; set; }
         public string Titulo { get; set; }
         public int Ano { get; set; }
-        public int GeneroId { get; set; }
-        public string GeneroNome { get; set; }
-        public int AutorId { get; set; }
-        public string AutorNome { get; set; }
+        
+        // Lista de gêneros associados ao livro
+        public List<GeneroSimplificadoDto> Generos { get; set; } = new List<GeneroSimplificadoDto>();
+        
+        // Objeto autor completo
+        public AutorDto Autor { get; set; }
     }
 }

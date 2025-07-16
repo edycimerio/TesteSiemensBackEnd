@@ -19,16 +19,18 @@ namespace SistemaLivros.Infrastructure.Repositories
             return await _dbSet
                 .Where(l => l.AutorId == autorId)
                 .Include(l => l.Autor)
-                .Include(l => l.Genero)
+                .Include(l => l.LivroGeneros)
+                    .ThenInclude(lg => lg.Genero)
                 .ToListAsync();
         }
 
         public async Task<IEnumerable<Livro>> GetByGeneroIdAsync(int generoId)
         {
             return await _dbSet
-                .Where(l => l.GeneroId == generoId)
+                .Where(l => l.LivroGeneros.Any(lg => lg.GeneroId == generoId))
                 .Include(l => l.Autor)
-                .Include(l => l.Genero)
+                .Include(l => l.LivroGeneros)
+                    .ThenInclude(lg => lg.Genero)
                 .ToListAsync();
         }
 
@@ -37,7 +39,8 @@ namespace SistemaLivros.Infrastructure.Repositories
             return await _dbSet
                 .Where(l => l.Titulo.ToLower().Contains(titulo.ToLower()))
                 .Include(l => l.Autor)
-                .Include(l => l.Genero)
+                .Include(l => l.LivroGeneros)
+                    .ThenInclude(lg => lg.Genero)
                 .ToListAsync();
         }
 
@@ -45,7 +48,8 @@ namespace SistemaLivros.Infrastructure.Repositories
         {
             return await _dbSet
                 .Include(l => l.Autor)
-                .Include(l => l.Genero)
+                .Include(l => l.LivroGeneros)
+                    .ThenInclude(lg => lg.Genero)
                 .FirstOrDefaultAsync(l => l.Id == id);
         }
 
@@ -53,7 +57,8 @@ namespace SistemaLivros.Infrastructure.Repositories
         {
             return await _dbSet
                 .Include(l => l.Autor)
-                .Include(l => l.Genero)
+                .Include(l => l.LivroGeneros)
+                    .ThenInclude(lg => lg.Genero)
                 .ToListAsync();
         }
     }

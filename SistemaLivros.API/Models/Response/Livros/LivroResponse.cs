@@ -1,3 +1,7 @@
+using SistemaLivros.API.Models.Response.Autores;
+using SistemaLivros.API.Models.Response.Generos;
+using System.Collections.Generic;
+
 namespace SistemaLivros.API.Models.Response.Livros
 {
     public class LivroResponse
@@ -5,9 +9,13 @@ namespace SistemaLivros.API.Models.Response.Livros
         public int Id { get; set; }
         public string Titulo { get; set; }
         public int Ano { get; set; }
-        public int GeneroId { get; set; }
-        public string GeneroNome { get; set; }
-        public int AutorId { get; set; }
-        public string AutorNome { get; set; }
+        
+        // Removidas propriedades obsoletas GeneroId e GeneroNome
+        
+        // Lista de gêneros associados ao livro
+        public List<GeneroSimplificadoResponse> Generos { get; set; } = new List<GeneroSimplificadoResponse>();
+        
+        // Objeto autor completo em vez de propriedades separadas
+        public AutorResponse Autor { get; set; }
     }
 }

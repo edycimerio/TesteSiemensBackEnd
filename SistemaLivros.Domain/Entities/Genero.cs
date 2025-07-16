@@ -6,7 +6,9 @@ namespace SistemaLivros.Domain.Entities
     {
         public string Nome { get; private set; }
         public string Descricao { get; private set; }
-        public virtual ICollection<Livro> Livros { get; private set; }
+        
+        // Coleção para relacionamento muitos-para-muitos
+        public virtual ICollection<LivroGenero> LivroGeneros { get; private set; }
         
         protected Genero() { } // Para o EF Core
         
@@ -14,7 +16,7 @@ namespace SistemaLivros.Domain.Entities
         {
             Nome = nome;
             Descricao = descricao;
-            Livros = new List<Livro>();
+            LivroGeneros = new List<LivroGenero>();
         }
         
         public void Atualizar(string nome, string descricao)

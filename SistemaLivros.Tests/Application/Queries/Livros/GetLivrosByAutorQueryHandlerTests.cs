@@ -34,8 +34,20 @@ namespace SistemaLivros.Tests.Application.Queries.Livros
             
             var livros = new List<LivroDto>
             {
-                new LivroDto { Id = 1, Titulo = "Cem Anos de Solidão", Ano = 1967, AutorId = autorId, GeneroId = 1 },
-                new LivroDto { Id = 2, Titulo = "O Amor nos Tempos do Cólera", Ano = 1985, AutorId = autorId, GeneroId = 2 }
+                new LivroDto { 
+                    Id = 1, 
+                    Titulo = "Cem Anos de Solidão", 
+                    Ano = 1967, 
+                    Autor = new AutorDto { Id = autorId, Nome = "Gabriel García Márquez" },
+                    Generos = new List<GeneroSimplificadoDto> { new GeneroSimplificadoDto { Id = 1, Nome = "Realismo Mágico" } }
+                },
+                new LivroDto { 
+                    Id = 2, 
+                    Titulo = "O Amor nos Tempos do Cólera", 
+                    Ano = 1985, 
+                    Autor = new AutorDto { Id = autorId, Nome = "Gabriel García Márquez" },
+                    Generos = new List<GeneroSimplificadoDto> { new GeneroSimplificadoDto { Id = 2, Nome = "Romance" } }
+                }
             };
 
             _livroQueriesMock.Setup(q => q.GetByAutorIdAsync(autorId))
@@ -50,7 +62,7 @@ namespace SistemaLivros.Tests.Application.Queries.Livros
             Assert.Equal(2, resultList.Count);
             Assert.Equal("Cem Anos de Solidão", resultList[0].Titulo);
             Assert.Equal("O Amor nos Tempos do Cólera", resultList[1].Titulo);
-            Assert.All(resultList, livro => Assert.Equal(autorId, livro.AutorId));
+            Assert.All(resultList, livro => Assert.Equal(autorId, livro.Autor.Id));
             _livroQueriesMock.Verify(q => q.GetByAutorIdAsync(autorId), Times.Once);
         }
 

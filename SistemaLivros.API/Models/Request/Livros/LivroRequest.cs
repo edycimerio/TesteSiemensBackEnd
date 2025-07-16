@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace SistemaLivros.API.Models.Request.Livros
@@ -15,7 +16,7 @@ namespace SistemaLivros.API.Models.Request.Livros
         [Required(ErrorMessage = "O ID do autor é obrigatório")]
         public int AutorId { get; set; }
 
-        [Required(ErrorMessage = "O ID do gênero é obrigatório")]
-        public int GeneroId { get; set; }
+        [Required(ErrorMessage = "Pelo menos um gênero é obrigatório")]
+        public List<int> Generos { get; set; } = new List<int>();
     }
 }

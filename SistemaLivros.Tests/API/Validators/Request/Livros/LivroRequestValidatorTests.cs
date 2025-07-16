@@ -6,6 +6,7 @@ using SistemaLivros.API.Validators.Request.Livros;
 using SistemaLivros.Domain.Entities;
 using SistemaLivros.Domain.Interfaces;
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
@@ -36,7 +37,7 @@ namespace SistemaLivros.Tests.API.Validators.Request.Livros
         public async Task ValidaTituloObrigatorio()
         {
             // Arrange
-            var model = new LivroRequest { Titulo = "", Ano = 2020, AutorId = 1, GeneroId = 1 };
+            var model = new LivroRequest { Titulo = "", Ano = 2020, AutorId = 1, Generos = new List<int> { 1 } };
 
             // Act
             var result = await _validator.TestValidateAsync(model);
@@ -49,7 +50,7 @@ namespace SistemaLivros.Tests.API.Validators.Request.Livros
         public async Task ValidaTamanhoMaximoTitulo()
         {
             // Arrange
-            var model = new LivroRequest { Titulo = new string('A', 201), Ano = 2020, AutorId = 1, GeneroId = 1 };
+            var model = new LivroRequest { Titulo = new string('A', 201), Ano = 2020, AutorId = 1, Generos = new List<int> { 1 } };
 
             // Act
             var result = await _validator.TestValidateAsync(model);
@@ -62,7 +63,7 @@ namespace SistemaLivros.Tests.API.Validators.Request.Livros
         public async Task ValidaAnoMinimo()
         {
             // Arrange
-            var model = new LivroRequest { Titulo = "Título Válido", Ano = 999, AutorId = 1, GeneroId = 1 };
+            var model = new LivroRequest { Titulo = "Título Válido", Ano = 999, AutorId = 1, Generos = new List<int> { 1 } };
 
             // Act
             var result = await _validator.TestValidateAsync(model);
@@ -75,7 +76,7 @@ namespace SistemaLivros.Tests.API.Validators.Request.Livros
         public async Task ValidaAnoMaximo()
         {
             // Arrange
-            var model = new LivroRequest { Titulo = "Título Válido", Ano = 3000, AutorId = 1, GeneroId = 1 };
+            var model = new LivroRequest { Titulo = "Título Válido", Ano = 3000, AutorId = 1, Generos = new List<int> { 1 } };
 
             // Act
             var result = await _validator.TestValidateAsync(model);
@@ -89,7 +90,7 @@ namespace SistemaLivros.Tests.API.Validators.Request.Livros
         {
             // Arrange
             _autorRepositoryMock.Setup(r => r.GetByIdAsync(99)).ReturnsAsync((Autor)null);
-            var model = new LivroRequest { Titulo = "Título Válido", Ano = 2020, AutorId = 99, GeneroId = 1 };
+            var model = new LivroRequest { Titulo = "Título Válido", Ano = 2020, AutorId = 99, Generos = new List<int> { 1 } };
 
             // Act
             var result = await _validator.TestValidateAsync(model);
@@ -103,20 +104,33 @@ namespace SistemaLivros.Tests.API.Validators.Request.Livros
         {
             // Arrange
             _generoRepositoryMock.Setup(r => r.GetByIdAsync(99)).ReturnsAsync((Genero)null);
-            var model = new LivroRequest { Titulo = "Título Válido", Ano = 2020, AutorId = 1, GeneroId = 99 };
+            var model = new LivroRequest { Titulo = "Título Válido", Ano = 2020, AutorId = 1, Generos = new List<int> { 99 } };
 
             // Act
             var result = await _validator.TestValidateAsync(model);
 
             // Assert
-            result.ShouldHaveValidationErrorFor(x => x.GeneroId);
+            result.ShouldHaveValidationErrorFor(x => x.Generos);
+        }
+
+        [Fact]
+        public async Task ValidaListaGenerosVazia()
+        {
+            // Arrange
+            var model = new LivroRequest { Titulo = "Título Válido", Ano = 2020, AutorId = 1, Generos = new List<int>() };
+
+            // Act
+            var result = await _validator.TestValidateAsync(model);
+
+            // Assert
+            result.ShouldHaveValidationErrorFor(x => x.Generos);
         }
 
         [Fact]
         public async Task ValidaModeloValido()
         {
             // Arrange
-            var model = new LivroRequest { Titulo = "Título Válido", Ano = 2020, AutorId = 1, GeneroId = 1 };
+            var model = new LivroRequest { Titulo = "Título Válido", Ano = 2020, AutorId = 1, Generos = new List<int> { 1 } };
 
             // Act
             var result = await _validator.TestValidateAsync(model);

@@ -30,16 +30,16 @@ namespace SistemaLivros.Tests.Application.Commands.Livros
             // Arrange
             var livroId = 1;
             var command = new DeleteLivroCommand(livroId);
-            
+
             // Criar o livro usando o construtor público
-            var livro = new Livro("Cem Anos de Solidão", 1967, 1, 1);
-            
+            var livro = new Livro("Cem Anos de Solidão", 1967, 1);
+
             // Usar reflection para definir o Id para teste
             typeof(Entity).GetProperty("Id").SetValue(livro, livroId);
 
             _livroRepositoryMock.Setup(r => r.GetByIdAsync(livroId))
                 .ReturnsAsync(livro);
-                
+
             // Act
             var result = await _handler.Handle(command, CancellationToken.None);
 
@@ -54,10 +54,10 @@ namespace SistemaLivros.Tests.Application.Commands.Livros
             // Arrange
             var livroId = 99;
             var command = new DeleteLivroCommand(livroId);
-            
+
             _livroRepositoryMock.Setup(r => r.GetByIdAsync(livroId))
                 .ReturnsAsync((Livro)null);
-                
+
             // Act
             var result = await _handler.Handle(command, CancellationToken.None);
 

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace SistemaLivros.Application.DTOs
 {
@@ -8,16 +9,10 @@ namespace SistemaLivros.Application.DTOs
         public string Titulo { get; set; }
         public int Ano { get; set; }
         
-        // Informações do autor
-        public int AutorId { get; set; }
-        public string AutorNome { get; set; }
-        public string AutorBiografia { get; set; }
+        // Objeto autor completo
+        public AutorDto Autor { get; set; }
         
-        // Informações do gênero
-        public int GeneroId { get; set; }
-        public string GeneroNome { get; set; }
-        public string GeneroDescricao { get; set; }
-        
-        // Removido DataCadastro pois não existe na tabela
+        // Coleção de gêneros associados ao livro
+        public List<GeneroSimplificadoDto> Generos { get; set; } = new List<GeneroSimplificadoDto>();
     }
 }

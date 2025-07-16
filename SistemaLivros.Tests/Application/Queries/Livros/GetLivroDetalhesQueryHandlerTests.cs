@@ -34,11 +34,7 @@ namespace SistemaLivros.Tests.Application.Queries.Livros
             {
                 Id = livroId,
                 Titulo = "Cem Anos de Solidão",
-                Ano = 1967,
-                AutorId = 1,
-                GeneroId = 2,
-                AutorNome = "Gabriel García Márquez",
-                GeneroNome = "Realismo Mágico"
+                Ano = 1967
             };
 
             _livroQueriesMock.Setup(q => q.GetDetalhesAsync(livroId))
@@ -52,10 +48,6 @@ namespace SistemaLivros.Tests.Application.Queries.Livros
             Assert.Equal(livroId, result.Id);
             Assert.Equal(livroDetalhesDto.Titulo, result.Titulo);
             Assert.Equal(livroDetalhesDto.Ano, result.Ano);
-            Assert.Equal(livroDetalhesDto.AutorId, result.AutorId);
-            Assert.Equal(livroDetalhesDto.GeneroId, result.GeneroId);
-            Assert.Equal(livroDetalhesDto.AutorNome, result.AutorNome);
-            Assert.Equal(livroDetalhesDto.GeneroNome, result.GeneroNome);
             _livroQueriesMock.Verify(q => q.GetDetalhesAsync(livroId), Times.Once);
         }
 

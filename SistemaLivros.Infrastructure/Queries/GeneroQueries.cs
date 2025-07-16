@@ -44,19 +44,37 @@ namespace SistemaLivros.Infrastructure.Queries
             if (genero == null)
                 return null;
                 
-            // Depois, busca os livros associados a este gênero
+            // Busca os livros associados a este gênero através da tabela de relacionamento LivroGenero
             const string livrosSql = @"
-                SELECT l.Id, l.Titulo, l.Ano, l.GeneroId, g.Nome as GeneroNome,
-                       l.AutorId, a.Nome as AutorNome
+                SELECT l.Id, l.Titulo, l.Ano, l.AutorId, a.Nome as AutorNome
                 FROM Livros l
-                INNER JOIN Generos g ON l.GeneroId = g.Id
+                INNER JOIN LivroGeneros lg ON l.Id = lg.LivroId
                 LEFT JOIN Autores a ON l.AutorId = a.Id
-                WHERE l.GeneroId = @GeneroId";
+                WHERE lg.GeneroId = @GeneroId";
                 
             var livros = await connection.QueryAsync<LivroDto>(livrosSql, new { GeneroId = id });
             
+            // Converter para lista para poder modificar
+            var livrosList = livros.ToList();
+            
+            // Para cada livro, buscar todos os seus gêneros
+            foreach (var livro in livrosList)
+            {
+                // Buscar todos os gêneros associados a este livro
+                const string generosSql = @"
+                    SELECT g.Id, g.Nome, g.Descricao
+                    FROM Generos g
+                    INNER JOIN LivroGeneros lg ON g.Id = lg.GeneroId
+                    WHERE lg.LivroId = @LivroId";
+                
+                var generos = await connection.QueryAsync<GeneroSimplificadoDto>(generosSql, new { LivroId = livro.Id });
+                livro.Generos = generos.ToList();
+                
+                // Não precisamos mais definir o GeneroNome, pois foi removido do DTO
+            }
+            
             // Associa os livros ao gênero
-            genero.Livros = livros.ToList();
+            genero.Livros = livrosList;
             
             return genero;
         }

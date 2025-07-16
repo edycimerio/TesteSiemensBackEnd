@@ -4,6 +4,8 @@ using SistemaLivros.Application.Commands.Livros;
 using SistemaLivros.Domain.Entities;
 using SistemaLivros.Domain.Interfaces;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -37,7 +39,8 @@ namespace SistemaLivros.Tests.Application.Commands.Livros
             // Arrange
             var generoId = 1;
             var autorId = 1;
-            var command = new CreateLivroCommand("Cem Anos de Solidão", 1967, generoId, autorId);
+            var generos = new List<int> { generoId };
+            var command = new CreateLivroCommand("Cem Anos de Solidão", 1967, autorId, generos);
 
             // Criar as entidades usando os construtores públicos
             var genero = new Genero("Realismo Mágico", "Gênero literário");
@@ -64,7 +67,6 @@ namespace SistemaLivros.Tests.Application.Commands.Livros
             _livroRepositoryMock.Verify(r => r.AddAsync(It.Is<Livro>(l => 
                 l.Titulo == command.Titulo && 
                 l.Ano == command.Ano &&
-                l.GeneroId == command.GeneroId &&
                 l.AutorId == command.AutorId)), 
                 Times.Once);
         }
@@ -75,13 +77,18 @@ namespace SistemaLivros.Tests.Application.Commands.Livros
             // Arrange
             var generoId = 99;
             var autorId = 2;
-            var command = new CreateLivroCommand("Cem Anos de Solidão", 1967, generoId, autorId);
+            var generos = new List<int> { generoId };
+            var command = new CreateLivroCommand("Cem Anos de Solidão", 1967, autorId, generos);
+
+            // Configuramos o mock para retornar um autor válido
+            var autor = new Autor("Gabriel García Márquez", "Escritor colombiano", new DateTime(1927, 3, 6));
+            typeof(Entity).GetProperty("Id").SetValue(autor, autorId);
+            _autorRepositoryMock.Setup(r => r.GetByIdAsync(autorId))
+                .ReturnsAsync(autor);
 
             // Configuramos o mock para retornar null quando o ID for 99
             _generoRepositoryMock.Setup(r => r.GetByIdAsync(99))
                 .ReturnsAsync((Genero)null);
-                
-            // Não configuramos o mock do autor porque a validação de gênero ocorre primeiro
 
             // Act & Assert
             var exception = await Assert.ThrowsAsync<Exception>(() => 
@@ -97,7 +104,8 @@ namespace SistemaLivros.Tests.Application.Commands.Livros
             // Arrange
             var generoId = 1;
             var autorId = 99;
-            var command = new CreateLivroCommand("Cem Anos de Solidão", 1967, generoId, autorId);
+            var generos = new List<int> { generoId };
+            var command = new CreateLivroCommand("Cem Anos de Solidão", 1967, autorId, generos);
 
             var genero = new Genero("Realismo Mágico", "Gênero literário");
             typeof(Entity).GetProperty("Id").SetValue(genero, generoId);
