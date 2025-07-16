@@ -135,9 +135,6 @@ namespace SistemaLivros.API.Controllers
         [ProducesResponseType(400)]
         public async Task<IActionResult> Create([FromBody] LivroRequest request)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
             var command = _mapper.Map<CreateLivroCommand>(request);
 
             try
@@ -169,9 +166,6 @@ namespace SistemaLivros.API.Controllers
         [ProducesResponseType(404)]
         public async Task<IActionResult> Update(int id, [FromBody] LivroRequest request)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
             var command = _mapper.Map<UpdateLivroCommand>(request);
             command.Id = id; // Define o ID do comando a partir da rota
 

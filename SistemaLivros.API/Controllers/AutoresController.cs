@@ -87,9 +87,6 @@ namespace SistemaLivros.API.Controllers
         [ProducesResponseType(400)]
         public async Task<IActionResult> Create([FromBody] AutorRequest request)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
             var command = _mapper.Map<CreateAutorCommand>(request);
             var id = await _mediator.Send(command);
 
@@ -113,9 +110,6 @@ namespace SistemaLivros.API.Controllers
         [ProducesResponseType(404)]
         public async Task<IActionResult> Update(int id, [FromBody] AutorRequest request)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
             var command = _mapper.Map<UpdateAutorCommand>(request);
             command.Id = id; // Define o ID do comando a partir da rota
             

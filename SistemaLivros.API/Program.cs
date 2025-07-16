@@ -1,3 +1,5 @@
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -6,6 +8,9 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 using SistemaLivros.API.Mappings;
+using SistemaLivros.API.Validators.Request.Autores;
+using SistemaLivros.API.Validators.Request.Generos;
+using SistemaLivros.API.Validators.Request.Livros;
 using SistemaLivros.Infrastructure.Data;
 using SistemaLivros.IoC;
 using System;
@@ -18,8 +23,12 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddApplication();
 
-// Adicionar controllers
-builder.Services.AddControllers();
+// Adicionar controllers com FluentValidation
+builder.Services.AddControllers()
+    .AddFluentValidation(fv => {
+        fv.RegisterValidatorsFromAssemblyContaining<GeneroRequestValidator>();
+        fv.DisableDataAnnotationsValidation = true; // Desabilita validações com DataAnnotations
+    });
 
 // Configuração do AutoMapper
 builder.Services.AddAutoMapper(typeof(MappingProfile));
