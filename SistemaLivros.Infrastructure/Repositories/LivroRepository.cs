@@ -61,5 +61,11 @@ namespace SistemaLivros.Infrastructure.Repositories
                     .ThenInclude(lg => lg.Genero)
                 .ToListAsync();
         }
+
+        public async Task<int> CountLivrosByAutorIdAsync(int autorId)
+        {
+            return await _dbSet
+                .CountAsync(l => l.AutorId == autorId);
+        }
     }
 }

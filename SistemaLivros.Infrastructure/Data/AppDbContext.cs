@@ -57,7 +57,8 @@ namespace SistemaLivros.Infrastructure.Data
             modelBuilder.Entity<LivroGenero>()
                 .HasOne(lg => lg.Livro)
                 .WithMany(l => l.LivroGeneros)
-                .HasForeignKey(lg => lg.LivroId);
+                .HasForeignKey(lg => lg.LivroId)
+                .OnDelete(DeleteBehavior.Cascade); // Configuração para exclusão em cascata
                 
             modelBuilder.Entity<LivroGenero>()
                 .HasOne(lg => lg.Genero)

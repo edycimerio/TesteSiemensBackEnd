@@ -6,5 +6,6 @@ namespace SistemaLivros.Domain.Interfaces
     public interface IGeneroRepository : IRepository<Genero>
     {
         Task<Genero> GetByNomeAsync(string nome);
+        Task<int> CountLivrosByGeneroIdAsync(int generoId);
     }
 }

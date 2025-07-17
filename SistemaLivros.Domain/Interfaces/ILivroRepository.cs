@@ -9,5 +9,6 @@ namespace SistemaLivros.Domain.Interfaces
         Task<IEnumerable<Livro>> GetByGeneroIdAsync(int generoId);
         Task<IEnumerable<Livro>> GetByAutorIdAsync(int autorId);
         Task<IEnumerable<Livro>> GetByTituloAsync(string titulo);
+        Task<int> CountLivrosByAutorIdAsync(int autorId);
     }
 }

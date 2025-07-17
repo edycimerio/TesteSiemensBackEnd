@@ -8,6 +8,7 @@ using SistemaLivros.Application.Common;
 using SistemaLivros.Application.Queries.Generos.GetAllGeneros;
 using SistemaLivros.Application.Queries.Generos.GetGeneroById;
 using SistemaLivros.Application.Queries.Generos.GetGeneroDetalhes;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -132,15 +133,24 @@ namespace SistemaLivros.API.Controllers
         [HttpDelete("{id}")]
         [ProducesResponseType(204)]
         [ProducesResponseType(404)]
+        [ProducesResponseType(typeof(string), 400)]
         public async Task<IActionResult> Delete(int id)
         {
-            var command = new DeleteGeneroCommand(id);
-            var result = await _mediator.Send(command);
+            try
+            {
+                var command = new DeleteGeneroCommand(id);
+                var result = await _mediator.Send(command);
 
-            if (!result)
-                return NotFound();
+                if (!result)
+                    return NotFound();
 
-            return NoContent();
+                return NoContent();
+            }
+            catch (InvalidOperationException ex)
+            {
+                // Captura exceções de integridade referencial
+                return BadRequest(ex.Message);
+            }
         }
     }
 }

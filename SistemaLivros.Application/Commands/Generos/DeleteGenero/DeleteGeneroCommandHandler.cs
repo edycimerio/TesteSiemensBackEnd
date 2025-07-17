@@ -1,5 +1,6 @@
 using MediatR;
 using SistemaLivros.Domain.Interfaces;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -16,8 +17,14 @@ namespace SistemaLivros.Application.Commands.Generos
 
         public async Task<bool> Handle(DeleteGeneroCommand request, CancellationToken cancellationToken)
         {
+            // Verificar se existem associações na tabela LivroGeneros
+            var associacoesCount = await _generoRepository.CountLivrosByGeneroIdAsync(request.Id);
+            if (associacoesCount > 0)
+            {
+                throw new InvalidOperationException($"Não é possível excluir o gênero pois existem {associacoesCount} livros associados a ele.");
+            }
+
             var genero = await _generoRepository.GetByIdAsync(request.Id);
-            
             if (genero == null)
                 return false;
                 

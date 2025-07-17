@@ -8,6 +8,7 @@ using SistemaLivros.Application.Common;
 using SistemaLivros.Application.Queries.Autores.GetAllAutores;
 using SistemaLivros.Application.Queries.Autores.GetAutorById;
 using SistemaLivros.Application.Queries.Autores.GetAutorDetalhes;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -132,15 +133,24 @@ namespace SistemaLivros.API.Controllers
         [HttpDelete("{id}")]
         [ProducesResponseType(204)]
         [ProducesResponseType(404)]
+        [ProducesResponseType(typeof(string), 400)]
         public async Task<IActionResult> Delete(int id)
         {
-            var command = new DeleteAutorCommand(id);
-            var result = await _mediator.Send(command);
+            try
+            {
+                var command = new DeleteAutorCommand(id);
+                var result = await _mediator.Send(command);
 
-            if (!result)
-                return NotFound();
+                if (!result)
+                    return NotFound();
 
-            return NoContent();
+                return NoContent();
+            }
+            catch (InvalidOperationException ex)
+            {
+                // Captura exceções de integridade referencial
+                return BadRequest(ex.Message);
+            }
         }
     }
 }
