@@ -52,7 +52,7 @@ namespace SistemaLivros.Application.Commands.Livros
             // Remove todos os gêneros da lista usando o ID
             foreach (var generoId in request.Generos.Distinct())
             {
-                await _generoRepository.RemoveAsync(generoId);                
+                 livro.RemoverGenero(generoId);                
             }
 
             // Adiciona todos os gêneros da lista usando o ID
