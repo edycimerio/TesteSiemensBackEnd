@@ -49,9 +49,12 @@ namespace SistemaLivros.Application.Commands.Livros
             // Atualiza o livro com as informações básicas
             livro.Atualizar(request.Titulo, request.Ano, request.AutorId);
             
-            // Limpa os gêneros existentes e adiciona os novos
-            livro.LimparGeneros();
-            
+            // Remove todos os gêneros da lista usando o ID
+            foreach (var generoId in request.Generos.Distinct())
+            {
+                await _generoRepository.RemoveAsync(generoId);                
+            }
+
             // Adiciona todos os gêneros da lista usando o ID
             foreach (var generoId in request.Generos.Distinct())
             {

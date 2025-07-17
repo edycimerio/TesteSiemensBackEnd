@@ -32,7 +32,7 @@ namespace SistemaLivros.Infrastructure.Queries
         SELECT l.Id, l.Titulo, l.Ano
         FROM Livros l
         ORDER BY l.Id
-        OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY";
+        LIMIT @PageSize OFFSET @Offset";
     
         var offset = (paginationParams.PageNumber - 1) * paginationParams.PageSize;
         var livros = await connection.QueryAsync<LivroDto>(sql, new { Offset = offset, PageSize = paginationParams.PageSize });
@@ -119,7 +119,7 @@ namespace SistemaLivros.Infrastructure.Queries
             FROM Livros l
             WHERE l.AutorId = @AutorId
             ORDER BY l.Id
-            OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY";
+            LIMIT @PageSize OFFSET @Offset";
         
             var offset = (paginationParams.PageNumber - 1) * paginationParams.PageSize;
             var livros = await connection.QueryAsync<LivroDto>(sql, 
@@ -176,7 +176,7 @@ namespace SistemaLivros.Infrastructure.Queries
             INNER JOIN LivroGeneros lg ON l.Id = lg.LivroId
             WHERE lg.GeneroId = @GeneroId
             ORDER BY l.Id
-            OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY";
+            LIMIT @PageSize OFFSET @Offset";
         
             var offset = (paginationParams.PageNumber - 1) * paginationParams.PageSize;
             var livros = await connection.QueryAsync<LivroDto>(sql, 
@@ -236,7 +236,7 @@ namespace SistemaLivros.Infrastructure.Queries
         LEFT JOIN Generos g ON lg.GeneroId = g.Id
         WHERE l.Titulo LIKE @Termo OR a.Nome LIKE @Termo OR g.Nome LIKE @Termo
         ORDER BY l.Id
-        OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY";
+        LIMIT @PageSize OFFSET @Offset";
     
         var offset = (paginationParams.PageNumber - 1) * paginationParams.PageSize;
         var livros = await connection.QueryAsync<LivroDto>(sql, 

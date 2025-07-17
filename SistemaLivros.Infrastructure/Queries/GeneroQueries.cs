@@ -31,7 +31,7 @@ namespace SistemaLivros.Infrastructure.Queries
                 SELECT Id, Nome, Descricao 
                 FROM Generos
                 ORDER BY Id
-                OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY";
+                LIMIT @PageSize OFFSET @Offset";
             
             var offset = (paginationParams.PageNumber - 1) * paginationParams.PageSize;
             var generos = await connection.QueryAsync<GeneroDto>(sql, 

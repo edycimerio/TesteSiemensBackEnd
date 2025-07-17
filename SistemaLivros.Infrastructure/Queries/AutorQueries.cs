@@ -31,7 +31,7 @@ namespace SistemaLivros.Infrastructure.Queries
                 SELECT Id, Nome, Biografia, DataNascimento 
                 FROM Autores
                 ORDER BY Id
-                OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY";
+                LIMIT @PageSize OFFSET @Offset";
             
             var offset = (paginationParams.PageNumber - 1) * paginationParams.PageSize;
             var autores = await connection.QueryAsync<AutorDto>(sql, 
